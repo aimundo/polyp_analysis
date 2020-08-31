@@ -44,7 +44,7 @@ ggplot(data1,aes(x=DAY, y=STO2, linetype=TUMOR))+theme_bw()+
   facet_wrap(~ID,ncol=5)
 
 
-#StO2 plot per week per group with means ****best one****
+#StO2 plot per week per subject per group all groups
 library(ggrepel)
 library(tidyverse)
 pd=position_dodge(1.0)
@@ -55,14 +55,81 @@ ggplot(data1,aes(x=DAY, y=STO2, linetype=TUMOR))+theme_bw()+
   scale_x_continuous(breaks=seq(1,6,1))+
   geom_errorbar(aes(ymin=STO2min, ymax=STO2max,
                     color=factor(TUMOR),
-                    linetype=NULL), width=2,position=pd,size=0.6,show.legend = FALSE)+
-  facet_wrap(~ID,ncol=5)+
-  geom_label_repel(data=data1%>% filter(DAY==1),aes(label = TUMOR , fill=factor(TUMOR)),
+                    linetype=NULL), width=2,position=pd,size=1,show.legend = FALSE)+
+  facet_wrap(ID~GROUP,ncol=5)+
+  geom_label_repel(data=data1,aes(label = TUMOR , fill=factor(TUMOR)),
                    box.padding   = 0.35, 
                    point.padding = 0.5,
-                   segment.color = 'grey50',show.legend = FALSE)+ 
+                   color ='black',
+show.legend = FALSE)+ 
   labs(title='',y="Oxygen Saturation(%)")
   
+
+#StO2 plot per week per subject per group MG **best**
+library(ggrepel)
+library(tidyverse)
+pd=position_dodge(1.0)
+ggplot(data=subset(data1,GROUP=='MG'),aes(x=DAY, y=STO2, linetype=TUMOR))+theme_bw()+
+  theme(text=element_text(size=20))+
+  geom_point(aes(color=factor(TUMOR)), position=pd, size=2, show.legend = FALSE)+
+  geom_line(aes(color=factor(TUMOR)), position=pd,size=1, linetype="solid",show.legend = FALSE)+
+  scale_x_continuous(breaks=seq(1,6,1))+
+  geom_errorbar(aes(ymin=STO2min, ymax=STO2max,
+                    color=factor(TUMOR),
+                    linetype=NULL), width=0.5,position=pd,size=1,show.legend = FALSE)+
+  facet_wrap(~ID,ncol=5)+
+  geom_label_repel(data=subset(data1,GROUP=='MG'),aes(label = TUMOR , fill=factor(TUMOR)),
+                   box.padding   = 0.35, 
+                   point.padding = 0.5,
+                   color ='black',
+                   show.legend = FALSE)+ 
+  labs(title='METRONOMIC',y="Oxygen Saturation(%)")
+
+
+
+#StO2 plot per week per subject per group MTD **best**
+library(ggrepel)
+library(tidyverse)
+pd=position_dodge(1.0)
+ggplot(data=subset(data1,GROUP=='MTD'),aes(x=DAY, y=STO2, linetype=TUMOR))+theme_bw()+
+  theme(text=element_text(size=20))+
+  geom_point(aes(color=factor(TUMOR)), position=pd, size=2, show.legend = FALSE)+
+  geom_line(aes(color=factor(TUMOR)), position=pd,size=1, linetype="solid",show.legend = FALSE)+
+  scale_x_continuous(breaks=seq(1,6,1))+
+  geom_errorbar(aes(ymin=STO2min, ymax=STO2max,
+                    color=factor(TUMOR),
+                    linetype=NULL), width=0.5,position=pd,size=1,show.legend = FALSE)+
+  facet_wrap(~ID,ncol=5)+
+  geom_label_repel(data=subset(data1,GROUP=='MTD'),aes(label = TUMOR , fill=factor(TUMOR)),
+                   box.padding   = 0.35, 
+                   point.padding = 0.5,
+                   color ='black',
+                   show.legend = FALSE)+ 
+  labs(title='MTD',y="Oxygen Saturation(%)")
+
+#StO2 plot per week per subject per group CG **best**
+library(ggrepel)
+library(tidyverse)
+pd=position_dodge(1.0)
+ggplot(data=subset(data1,GROUP=='CG'),aes(x=DAY, y=STO2, linetype=TUMOR))+theme_bw()+
+  theme(text=element_text(size=20))+
+  geom_point(aes(color=factor(TUMOR)), position=pd, size=2, show.legend = FALSE)+
+  geom_line(aes(color=factor(TUMOR)), position=pd,size=1, linetype="solid",show.legend = FALSE)+
+  scale_x_continuous(breaks=seq(1,6,1))+
+  geom_errorbar(aes(ymin=STO2min, ymax=STO2max,
+                    color=factor(TUMOR),
+                    linetype=NULL), width=0.5,position=pd,size=1,show.legend = FALSE)+
+  facet_wrap(~ID,ncol=5)+
+  geom_label_repel(data=subset(data1,GROUP=='CG'),aes(label = TUMOR , fill=factor(TUMOR)),
+                   box.padding   = 0.35, 
+                   point.padding = 0.5,
+                   color ='black',
+                   show.legend = FALSE)+ 
+  labs(title='CG',y="Oxygen Saturation(%)")
+
+
+
+
 
 
 #StO2 plot per week per group plus means with color per subject
