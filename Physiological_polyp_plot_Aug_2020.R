@@ -29,69 +29,19 @@ data1$HBO2<-(data1$HB*data1$STO2)/100
 data1$HB0<-(data1$HB*(100-data1$STO2))/100
 
 
-#StO2 Longitudinal boxplot  plus mean values per group ***best one***
-ggplot(data1,aes(x=DAY,y=STO2,colour=ID))+
-  theme_bw()+
-  theme(text=element_text(size=20),aspect.ratio = 1)+
-  geom_boxplot(aes(color=TUMOR, group=DAY),outlier.size=3)+
-  labs(title='',y="Oxygen Saturation(%)")+
-  stat_summary(aes(group=GROUP), fun.y=mean, geom="line",size=1.5)+
-  scale_x_continuous(breaks=seq(1,6,1))+
-  facet_wrap(~GROUP)
-
-
-##Sto2 boxplot over time **best one**
-ggplot(data1,aes(x=factor(data1$DAY),y=STO2, color=GROUP))+
-  geom_boxplot(aes(color=GROUP),outlier.size=3)+
-  theme_bw()+stat_summary(aes(group=GROUP), fun.y=mean, geom="line",size=1.5)+labs(title=expression(StO[2]),x='Weeks',y="(%)")+theme(plot.title = element_text(hjust = 0.5))+theme(text=element_text(size=30),aspect.ratio = 1)
-
-
-##Sto2 boxplot over time CG and MTD **best one**
-myplot<-ggplot(data1,aes(x=factor(data1$Week),y=StO2))+
-  geom_boxplot(aes(color=Treatment),outlier.size=3)+
-  theme_bw()+stat_summary(aes(group=Treatment), fun.y=mean, geom="line",size=1.5)+labs(title=expression(StO[2]),x='Weeks',y="(%)")+theme(plot.title = element_text(hjust = 0.5))+theme(text=element_text(size=30),aspect.ratio = 1)
-
-
-
-##Oxyhemoglobin boxplot over time **best one**
-ggplot(data1,aes(x=factor(data1$Week),y=OxyHb, color=Treatment))+
-  geom_boxplot(aes(color=Treatment),outlier.size=3)+
-  theme_bw()+stat_summary(aes(group=Treatment), fun.y=mean, geom="line",size=1.5)+labs(title=expression(HbO[2]),x='Weeks',y="(mg/mL)")+theme(plot.title = element_text(hjust = 0.5))+theme(text=element_text(size=30),aspect.ratio = 1)
-
-##Deoxyhemoglobin boxplot over time **best one**
-ggplot(data1,aes(x=factor(data1$Week),y=DeoxyHb, color=Treatment))+
-  geom_boxplot(aes(color=Treatment),outlier.size=3)+
-  theme_bw()+stat_summary(aes(group=Treatment), fun.y=mean, geom="line",size=1.5)+labs(title=expression(Hb),x='Weeks',y="(mg/mL)")+theme(plot.title = element_text(hjust = 0.5))+theme(text=element_text(size=30),aspect.ratio = 1)
-
-##mean reduced scattering coefficient  boxplot over time **best one**
-ggplot(data1,aes(x=factor(data1$Week),y=A, color=Treatment))+
-  geom_boxplot(aes(color=Treatment),outlier.size=3)+
-  theme_bw()+stat_summary(aes(group=Treatment), fun.y=mean, geom="line",size=1.5)+labs(title=expression(mu[s]^{"'"}),x='Weeks',y=expression(cm^-1))+theme(plot.title = element_text(hjust = 0.5))+theme(text=element_text(size=30),aspect.ratio = 1)
-
-##mean scattering exponent boxplot over time **best one**
-ggplot(data1,aes(x=factor(data1$Week),y=B, color=Treatment))+
-  geom_boxplot(aes(color=Treatment),outlier.size=3)+
-  theme_bw()+stat_summary(aes(group=Treatment), fun.y=mean, geom="line",size=1.5)+labs(title=expression({"Scattering exponent"}),x='Weeks',y=expression())+theme(plot.title = element_text(hjust = 0.5))+theme(text=element_text(size=30),aspect.ratio = 1)
-
-##tHb boxplot over time **best one**
-ggplot(data1,aes(x=factor(data1$Week),y=Hb, color=Treatment))+
-  geom_boxplot(aes(color=Treatment),outlier.size=3)+ylim(2,6)+
-  theme_bw()+stat_summary(aes(group=Treatment), fun.y=mean, geom="line",size=1.5)+labs(title=expression(tHb),x='Weeks',y="(mg/mL)")+theme(plot.title = element_text(hjust = 0.5))+theme(text=element_text(size=30),aspect.ratio = 1)
-
-#normal boxplot
-boxplot(StO2~Treatment*Week,data1,col=c('Red','Green','Blue'))
-
-#StO2 plot per week per group with means ****best one****
+  #StO2 plot per week per group with means ****best one****
 pd=position_dodge(1.0)
-ggplot(data1,aes(x=Week, y=StO2, linetype=Treatment))+theme_bw()+
-  theme(text=element_text(size=20),aspect.ratio = 1)+
-  geom_point(aes(color=Treatment,group=ID), position=pd, size=2)+
-  geom_line(aes(color=Treatment, group=ID), position=pd,size=1)+
+ggplot(data1,aes(x=DAY, y=STO2, linetype=TUMOR))+theme_bw()+
+  theme(text=element_text(size=20))+
+  geom_point(aes(color=factor(TUMOR)), position=pd, size=2)+
+  geom_line(aes(color=factor(TUMOR)), position=pd,size=1)+
   scale_x_continuous(breaks=seq(1,6,1))+
-  geom_errorbar(aes(ymin=StO2min, ymax=StO2max,color=Treatment,group=ID,linetype=NULL), width=2,position=pd,size=0.6,show.legend = FALSE)+
-  stat_summary(aes(group=Treatment), fun.y=mean, geom="line",linetype=1, size=1.5,show.legend=FALSE)+
+  geom_errorbar(aes(ymin=STO2min, ymax=STO2max,color=factor(TUMOR),linetype=NULL), width=2,position=pd,size=0.6,show.legend = FALSE)+
+  geom_text(data = data1, aes(x = 4.35, y = STO2, label = TUMOR), 
+            size = 4, hjust = 1, fontface = "bold")+
+  stat_summary(aes(group=GROUP), fun.y=mean, geom="line",linetype=1, size=1.5,show.legend=FALSE)+
   labs(title='',y="Oxygen Saturation(%)")+
-  facet_grid(~Treatment)
+  facet_wrap(~ID,ncol=5)
 
 #StO2 plot per week per group plus means with color per subject
 pd=position_dodge(1.0)
