@@ -43,6 +43,28 @@ ggplot(data1,aes(x=DAY, y=STO2, linetype=TUMOR))+theme_bw()+
   labs(title='',y="Oxygen Saturation(%)")+
   facet_wrap(~ID,ncol=5)
 
+
+#StO2 plot per week per group with means ****best one****
+library(ggrepel)
+library(tidyverse)
+pd=position_dodge(1.0)
+ggplot(data1,aes(x=DAY, y=STO2, linetype=TUMOR))+theme_bw()+
+  theme(text=element_text(size=20))+
+  geom_point(aes(color=factor(TUMOR)), position=pd, size=2, show.legend = FALSE)+
+  geom_line(aes(color=factor(TUMOR)), position=pd,size=1, linetype="solid",show.legend = FALSE)+
+  scale_x_continuous(breaks=seq(1,6,1))+
+  geom_errorbar(aes(ymin=STO2min, ymax=STO2max,
+                    color=factor(TUMOR),
+                    linetype=NULL), width=2,position=pd,size=0.6,show.legend = FALSE)+
+  facet_wrap(~ID,ncol=5)+
+  geom_label_repel(data=data1%>% filter(DAY==1),aes(label = TUMOR , fill=factor(TUMOR)),
+                   box.padding   = 0.35, 
+                   point.padding = 0.5,
+                   segment.color = 'grey50',show.legend = FALSE)+ 
+  labs(title='',y="Oxygen Saturation(%)")
+  
+
+
 #StO2 plot per week per group plus means with color per subject
 pd=position_dodge(1.0)
 ggplot(data1,aes(x=Week, y=StO2, linetype=Treatment))+theme_bw()+
