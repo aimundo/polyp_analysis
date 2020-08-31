@@ -70,41 +70,36 @@ library(ggrepel)
 library(tidyverse)
 pd=position_dodge(1.0)
 ggplot(data=subset(data1,GROUP=='MG'),aes(x=DAY, y=STO2, linetype=TUMOR))+theme_bw()+
-  theme(text=element_text(size=20))+
-  geom_point(aes(color=factor(TUMOR)), position=pd, size=2, show.legend = FALSE)+
-  geom_line(aes(color=factor(TUMOR)), position=pd,size=1, linetype="solid",show.legend = FALSE)+
+  geom_point(aes(color=TUMOR), position=pd, size=2, show.legend = FALSE)+
+  geom_line(aes(color=factor(TUMOR)), position=pd,size=1, linetype="solid")+
   scale_x_continuous(breaks=seq(1,6,1))+
   geom_errorbar(aes(ymin=STO2min, ymax=STO2max,
                     color=factor(TUMOR),
                     linetype=NULL), width=0.5,position=pd,size=1,show.legend = FALSE)+
-  facet_wrap(~ID,ncol=5)+
-  geom_label_repel(data=subset(data1,GROUP=='MG'),aes(label = TUMOR , fill=factor(TUMOR)),
-                   box.padding   = 0.35, 
-                   point.padding = 0.5,
-                   color ='black',
-                   show.legend = FALSE)+
+  theme(text=element_text(size=20),legend.position = "bottom",aspect.ratio = 1)+
+  facet_wrap(~ID,ncol=2)+
+  
   labs(title='METRONOMIC',y="Oxygen Saturation(%)")
 
-
+#geom_label_repel(data=subset(data1,GROUP=='MG'),aes(label = TUMOR , fill=factor(TUMOR)),
+                 #box.padding   = 0.35, 
+                 #point.padding = 0.5,
+                 #color ='black',
+                 #show.legend = FALSE)+
 
 #StO2 plot per week per subject per group MTD **best**
 library(ggrepel)
 library(tidyverse)
 pd=position_dodge(1.0)
 ggplot(data=subset(data1,GROUP=='MTD'),aes(x=DAY, y=STO2, linetype=TUMOR))+theme_bw()+
-  theme(text=element_text(size=20))+
   geom_point(aes(color=factor(TUMOR)), position=pd, size=2, show.legend = FALSE)+
-  geom_line(aes(color=factor(TUMOR)), position=pd,size=1, linetype="solid",show.legend = FALSE)+
+  geom_line(aes(color=factor(TUMOR)), position=pd,size=1, linetype="solid")+
   scale_x_continuous(breaks=seq(1,6,1))+
   geom_errorbar(aes(ymin=STO2min, ymax=STO2max,
                     color=factor(TUMOR),
                     linetype=NULL), width=0.5,position=pd,size=1,show.legend = FALSE)+
-  facet_wrap(~ID,ncol=5)+
-  geom_label_repel(data=subset(data1,GROUP=='MTD'),aes(label = TUMOR , fill=factor(TUMOR)),
-                   box.padding   = 0.35, 
-                   point.padding = 0.5,
-                   color ='black',
-                   show.legend = FALSE)+ 
+  facet_wrap(~ID,ncol=2)+
+  theme(text=element_text(size=20),legend.position = "bottom",aspect.ratio = 1)+
   labs(title='MTD',y="Oxygen Saturation(%)")
 
 #StO2 plot per week per subject per group CG **best**
@@ -112,19 +107,14 @@ library(ggrepel)
 library(tidyverse)
 pd=position_dodge(1.0)
 ggplot(data=subset(data1,GROUP=='CG'),aes(x=DAY, y=STO2, linetype=TUMOR))+theme_bw()+
-  theme(text=element_text(size=20))+
   geom_point(aes(color=factor(TUMOR)), position=pd, size=2, show.legend = FALSE)+
-  geom_line(aes(color=factor(TUMOR)), position=pd,size=1, linetype="solid",show.legend = FALSE)+
+  geom_line(aes(color=factor(TUMOR)), position=pd,size=1, linetype="solid")+
   scale_x_continuous(breaks=seq(1,6,1))+
   geom_errorbar(aes(ymin=STO2min, ymax=STO2max,
                     color=factor(TUMOR),
                     linetype=NULL), width=0.5,position=pd,size=1,show.legend = FALSE)+
-  facet_wrap(~ID,ncol=5)+
-  geom_label_repel(data=subset(data1,GROUP=='CG'),aes(label = TUMOR , fill=factor(TUMOR)),
-                   box.padding   = 0.35, 
-                   point.padding = 0.5,
-                   color ='black',
-                   show.legend = FALSE)+ 
+  theme(text=element_text(size=20),legend.position = "bottom",aspect.ratio = 1)+
+  facet_wrap(~ID,ncol=2)+
   labs(title='CG',y="Oxygen Saturation(%)")
 
 
