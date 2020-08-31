@@ -82,7 +82,7 @@ ggplot(data=subset(data1,GROUP=='MG'),aes(x=DAY, y=STO2, linetype=TUMOR))+theme_
                    box.padding   = 0.35, 
                    point.padding = 0.5,
                    color ='black',
-                   show.legend = FALSE)+ 
+                   show.legend = FALSE)+
   labs(title='METRONOMIC',y="Oxygen Saturation(%)")
 
 
