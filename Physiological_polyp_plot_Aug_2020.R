@@ -25,10 +25,15 @@ data1$Amax<-(data1$A+data1$A_SD)
 data1$Bmin<-(data1$B-data1$B_SD)
 data1$Bmax<-(data1$B+data1$B_SD)
 
-data1$HBO2<-(data1$HB*data1$STO2)/100
-data1$HB0<-(data1$HB*(100-data1$STO2))/100
+data1$HBO2<-(data1$HB*data1$STO2)
+data1$HBO2_SD<-data1$HB_SD*data1$STO2
+data1$HBO2max<-data1$HBO2+data1$HBO2_SD
+data1$HBO2min<-data1$HBO2-data1$HBO2_SD
 
-
+data1$HBO<-data1$HB*(1-data1$STO2)
+data1$HBO_SD<-data1$HB_SD*(1-data1$STO2)
+data1$HBOmax<-data1$HBO+data1$HBO_SD
+data1$HBOmin<-data1$HBO-data1$HBO_SD
   #StO2 plot per week per group with means ****best one****
 pd=position_dodge(1.0)
 ggplot(data1,aes(x=DAY, y=STO2, linetype=TUMOR))+theme_bw()+
@@ -44,25 +49,6 @@ ggplot(data1,aes(x=DAY, y=STO2, linetype=TUMOR))+theme_bw()+
   facet_wrap(~ID,ncol=5)
 
 
-#StO2 plot per week per subject per group all groups
-library(ggrepel)
-library(tidyverse)
-pd=position_dodge(1.0)
-ggplot(data1,aes(x=DAY, y=STO2, linetype=TUMOR))+theme_bw()+
-  theme(text=element_text(size=20))+
-  geom_point(aes(color=factor(TUMOR)), position=pd, size=2, show.legend = FALSE)+
-  geom_line(aes(color=factor(TUMOR)), position=pd,size=1, linetype="solid",show.legend = FALSE)+
-  scale_x_continuous(breaks=seq(1,6,1))+
-  geom_errorbar(aes(ymin=STO2min, ymax=STO2max,
-                    color=factor(TUMOR),
-                    linetype=NULL), width=2,position=pd,size=1,show.legend = FALSE)+
-  facet_wrap(ID~GROUP,ncol=5)+
-  geom_label_repel(data=data1,aes(label = TUMOR , fill=factor(TUMOR)),
-                   box.padding   = 0.35, 
-                   point.padding = 0.5,
-                   color ='black',
-show.legend = FALSE)+ 
-  labs(title='',y="Oxygen Saturation(%)")
   
 
 #StO2 plot per week per subject per group MG **best**
@@ -79,15 +65,20 @@ ggplot(data=subset(data1,GROUP=='MG'),aes(x=DAY, y=STO2, linetype=TUMOR))+theme_
                     linetype=NULL), width=0.5,position=pd,size=1,show.legend = FALSE)+
   scale_color_viridis_d(end = 0.75)+
   guides(color = guide_legend(override.aes = list(size = 6)))+
-  theme(text=element_text(size=20),legend.text=element_text(size=20),legend.position = "bottom",aspect.ratio = 0.75)+
+  stat_summary(aes(group=GROUP), fun.y=mean, geom="line",linetype=1, size=1.5,show.legend=FALSE)+
   facet_wrap(~ID,nrow=2)+
-  labs(title='METRONOMIC',y="Oxygen Saturation(%)")
+  labs(title='METRONOMIC',y="Oxygen Saturation(%)")+
+  theme(text=element_text(size=20),plot.title = element_text(hjust = 0.5),
+        legend.text=element_text(size=20),legend.position = "bottom",aspect.ratio = 0.75)
 
 #geom_label_repel(data=subset(data1,GROUP=='MG'),aes(label = TUMOR , fill=factor(TUMOR)),
                  #box.padding   = 0.35, 
                  #point.padding = 0.5,
                  #color ='black',
                  #show.legend = FALSE)+
+
+#StO2 plots 
+#################################################################
 
 #StO2 plot per week per subject per group MTD **best**
 library(ggrepel)
@@ -102,9 +93,11 @@ ggplot(data=subset(data1,GROUP=='MTD'),aes(x=DAY, y=STO2, linetype=TUMOR))+theme
                     linetype=NULL), width=0.5,position=pd,size=1,show.legend = FALSE)+
   scale_color_viridis_d(end = 0.75)+
   guides(color = guide_legend(override.aes = list(size = 6)))+
-  theme(text=element_text(size=20),legend.text=element_text(size=20),legend.position = "bottom",aspect.ratio = 0.75)+
-  facet_wrap(~ID,nrow =2)+
-  labs(title='MAXIMUM TOLERATED DOSE',y="Oxygen Saturation(%)")
+  stat_summary(aes(group=GROUP), fun.y=mean, geom="line",linetype=1, size=1.5,show.legend=FALSE)+
+   facet_wrap(~ID,nrow =2)+
+  labs(title='MAXIMUM TOLERATED DOSE',y="Oxygen Saturation(%)")+
+  theme(text=element_text(size=20),plot.title = element_text(hjust = 0.5),
+        legend.text=element_text(size=20),legend.position = "bottom",aspect.ratio = 0.75)
 
 
 #StO2 plot per week per subject per group CG **best**
@@ -120,25 +113,176 @@ ggplot(data=subset(data1,GROUP=='CG'),aes(x=DAY, y=STO2, linetype=TUMOR))+theme_
                     linetype=NULL), width=0.5,position=pd,size=1,show.legend = FALSE)+
   scale_color_viridis_d(end = 0.75)+
   guides(color = guide_legend(override.aes = list(size = 6)))+
-  theme(text=element_text(size=20),legend.text=element_text(size=20),legend.position = "bottom",aspect.ratio = 0.75)+
+  stat_summary(aes(group=GROUP), fun.y=mean, geom="line",linetype=1, size=1.5,show.legend=FALSE)+
   facet_wrap(~ID,nrow=2)+
-  labs(title='CONTROL',y="Oxygen Saturation(%)")
+  labs(title='CONTROL',y="Oxygen Saturation(%)")+
+  theme(text=element_text(size=20),plot.title = element_text(hjust = 0.5),
+        legend.text=element_text(size=20),legend.position = "bottom",aspect.ratio = 0.75)
 
-
-#StO2 plot per week per group plus means with color per subject
+#####
+#Hb plots
+#################################################################
+##################
+#HbO2 plots
+################################
+#MG group
+library(ggrepel)
+library(tidyverse)
 pd=position_dodge(1.0)
-ggplot(data1,aes(x=Week, y=StO2, linetype=Treatment))+theme_bw()+
-  theme(text=element_text(size=20),aspect.ratio = 1)+
-  geom_point(aes(color=factor(ID)), position=pd, size=2,show.legend=FALSE)+
-  geom_line(aes(color=factor(ID)), linetype=1, position = pd,size=1.5,show.legend=FALSE)+
+ggplot(data=subset(data1,GROUP=='MG'),aes(x=DAY, y=HBO2, linetype=TUMOR))+theme_bw()+
+  geom_point(aes(color=TUMOR), position=pd, size=2, show.legend = FALSE)+
+  geom_line(aes(color=factor(TUMOR)), position=pd,size=2, linetype="solid")+
   scale_x_continuous(breaks=seq(1,6,1))+
-  geom_errorbar(aes(ymin=StO2min, ymax=StO2max,color=factor(ID),linetype=NULL), width=2,position=pd,size=0.9,show.legend = FALSE)+
-  stat_summary(aes(group=Treatment), fun.y=mean, geom="line",linetype=1, size=1.5,show.legend=FALSE)+
-  labs(title='',y="Oxygen Saturation(%)")+
-  facet_grid(~Treatment)
+  geom_errorbar(aes(ymin=HBO2min, ymax=HBO2max,
+                    color=factor(TUMOR),
+                    linetype=NULL), width=0.5,position=pd,size=1,show.legend = FALSE)+
+  scale_color_viridis_d(end = 0.75)+
+  guides(color = guide_legend(override.aes = list(size = 6)))+
+  stat_summary(aes(group=GROUP), fun.y=mean, geom="line",linetype=1, size=1.5,show.legend=FALSE)+
+  facet_wrap(~ID,nrow =2)+
+  labs(title='METRONOMIC',y="HbO2(mg/mL)")+
+  theme(text=element_text(size=20),plot.title = element_text(hjust = 0.5),
+        legend.text=element_text(size=20),legend.position = "bottom",aspect.ratio = 0.75)
 
-##StO2 plot per week per subject
-#StO2 plot per week per group plus means with color per subject
+#MTD group
+
+ggplot(data=subset(data1,GROUP=='MTD'),aes(x=DAY, y=HBO2, linetype=TUMOR))+theme_bw()+
+  geom_point(aes(color=TUMOR), position=pd, size=2, show.legend = FALSE)+
+  geom_line(aes(color=factor(TUMOR)), position=pd,size=2, linetype="solid")+
+  scale_x_continuous(breaks=seq(1,6,1))+
+  geom_errorbar(aes(ymin=HBO2min, ymax=HBO2max,
+                    color=factor(TUMOR),
+                    linetype=NULL), width=0.5,position=pd,size=1,show.legend = FALSE)+
+  scale_color_viridis_d(end = 0.75)+
+  guides(color = guide_legend(override.aes = list(size = 6)))+
+  stat_summary(aes(group=GROUP), fun.y=mean, geom="line",linetype=1, size=1.5,show.legend=FALSE)+
+  facet_wrap(~ID,nrow =2)+
+  labs(title='MAXIMUM TOLERATED DOSE',y="HbO2(mg/mL)")+
+  theme(text=element_text(size=20),plot.title = element_text(hjust = 0.5),
+        legend.text=element_text(size=20),legend.position = "bottom",aspect.ratio = 0.75)
+
+
+#CG group
+ggplot(data=subset(data1,GROUP=='CG'),aes(x=DAY, y=HBO2, linetype=TUMOR))+theme_bw()+
+  geom_point(aes(color=TUMOR), position=pd, size=2, show.legend = FALSE)+
+  geom_line(aes(color=factor(TUMOR)), position=pd,size=2, linetype="solid")+
+  scale_x_continuous(breaks=seq(1,6,1))+
+  geom_errorbar(aes(ymin=HBO2min, ymax=HBO2max,
+                    color=factor(TUMOR),
+                    linetype=NULL), width=0.5,position=pd,size=1,show.legend = FALSE)+
+  scale_color_viridis_d(end = 0.75)+
+  guides(color = guide_legend(override.aes = list(size = 6)))+
+  stat_summary(aes(group=GROUP), fun.y=mean, geom="line",linetype=1, size=1.5,show.legend=FALSE)+
+  facet_wrap(~ID,nrow =2)+
+  labs(title='CONTROL',y="HbO2(mg/mL)")+
+  theme(text=element_text(size=20),plot.title = element_text(hjust = 0.5),
+        legend.text=element_text(size=20),legend.position = "bottom",aspect.ratio = 0.75)
+
+
+
+#######
+#Scattering coefficient (A) plots
+####################################
+#MG group
+pd=position_dodge(1.0)
+ggplot(data=subset(data1,GROUP=='MG'),aes(x=DAY, y=A, linetype=TUMOR))+theme_bw()+
+  geom_point(aes(color=TUMOR), position=pd, size=2, show.legend = FALSE)+
+  geom_line(aes(color=factor(TUMOR)), position=pd,size=2, linetype="solid")+
+  scale_x_continuous(breaks=seq(1,6,1))+
+  geom_errorbar(aes(ymin=Amin, ymax=Amax,
+                    color=factor(TUMOR),
+                    linetype=NULL), width=0.5,position=pd,size=1,show.legend = FALSE)+
+  scale_color_viridis_d(end = 0.75)+
+  guides(color = guide_legend(override.aes = list(size = 6)))+
+  stat_summary(aes(group=GROUP), fun.y=mean, geom="line",linetype=1, size=1.5,show.legend=FALSE)+
+  facet_wrap(~ID,nrow =2)+
+  labs(title='METRONOMIC',y="A")+
+  theme(text=element_text(size=20),plot.title = element_text(hjust = 0.5),
+        legend.text=element_text(size=20),legend.position = "bottom",aspect.ratio = 0.75)
+
+##MTD group
+ggplot(data=subset(data1,GROUP=='MTD'),aes(x=DAY, y=A, linetype=TUMOR))+theme_bw()+
+  geom_point(aes(color=TUMOR), position=pd, size=2, show.legend = FALSE)+
+  geom_line(aes(color=factor(TUMOR)), position=pd,size=2, linetype="solid")+
+  scale_x_continuous(breaks=seq(1,6,1))+
+  geom_errorbar(aes(ymin=Amin, ymax=Amax,
+                    color=factor(TUMOR),
+                    linetype=NULL), width=0.5,position=pd,size=1,show.legend = FALSE)+
+  scale_color_viridis_d(end = 0.75)+
+  guides(color = guide_legend(override.aes = list(size = 6)))+
+  stat_summary(aes(group=GROUP), fun.y=mean, geom="line",linetype=1, size=1.5,show.legend=FALSE)+
+  facet_wrap(~ID,nrow =2)+
+  labs(title='MAXIMUM TOLERATED DOSE',y="A")+
+  theme(text=element_text(size=20),plot.title = element_text(hjust = 0.5),
+        legend.text=element_text(size=20),legend.position = "bottom",aspect.ratio = 0.75)
+
+##CG group
+ggplot(data=subset(data1,GROUP=='CG'),aes(x=DAY, y=A, linetype=TUMOR))+theme_bw()+
+  geom_point(aes(color=TUMOR), position=pd, size=2, show.legend = FALSE)+
+  geom_line(aes(color=factor(TUMOR)), position=pd,size=2, linetype="solid")+
+  scale_x_continuous(breaks=seq(1,6,1))+
+  geom_errorbar(aes(ymin=Amin, ymax=Amax,
+                    color=factor(TUMOR),
+                    linetype=NULL), width=0.5,position=pd,size=1,show.legend = FALSE)+
+  scale_color_viridis_d(end = 0.75)+
+  guides(color = guide_legend(override.aes = list(size = 6)))+
+  stat_summary(aes(group=GROUP), fun.y=mean, geom="line",linetype=1, size=1.5,show.legend=FALSE)+
+  facet_wrap(~ID,nrow =2)+
+  labs(title='CONTROL',y="A")+
+  theme(text=element_text(size=20),plot.title = element_text(hjust = 0.5),
+        legend.text=element_text(size=20),legend.position = "bottom",aspect.ratio = 0.75)
+
+###########
+#Scattering exponent (B)
+#######################################
+##MG group
+ggplot(data=subset(data1,GROUP=='MG'),aes(x=DAY, y=B, linetype=TUMOR))+theme_bw()+
+  geom_point(aes(color=TUMOR), position=pd, size=2, show.legend = FALSE)+
+  geom_line(aes(color=factor(TUMOR)), position=pd,size=2, linetype="solid")+
+  scale_x_continuous(breaks=seq(1,6,1))+
+  geom_errorbar(aes(ymin=Bmin, ymax=Bmax,
+                    color=factor(TUMOR),
+                    linetype=NULL), width=0.5,position=pd,size=1,show.legend = FALSE)+
+  scale_color_viridis_d(end = 0.75)+
+  guides(color = guide_legend(override.aes = list(size = 6)))+
+  stat_summary(aes(group=GROUP), fun.y=mean, geom="line",linetype=1, size=1.5,show.legend=FALSE)+
+  facet_wrap(~ID,nrow =2)+
+  labs(title='METRONOMIC',y="B")+
+  theme(text=element_text(size=20),plot.title = element_text(hjust = 0.5),
+        legend.text=element_text(size=20),legend.position = "bottom",aspect.ratio = 0.75)
+
+##MTD group
+ggplot(data=subset(data1,GROUP=='MTD'),aes(x=DAY, y=B, linetype=TUMOR))+theme_bw()+
+  geom_point(aes(color=TUMOR), position=pd, size=2, show.legend = FALSE)+
+  geom_line(aes(color=factor(TUMOR)), position=pd,size=2, linetype="solid")+
+  scale_x_continuous(breaks=seq(1,6,1))+
+  geom_errorbar(aes(ymin=Bmin, ymax=Bmax,
+                    color=factor(TUMOR),
+                    linetype=NULL), width=0.5,position=pd,size=1,show.legend = FALSE)+
+  scale_color_viridis_d(end = 0.75)+
+  guides(color = guide_legend(override.aes = list(size = 6)))+
+  stat_summary(aes(group=GROUP), fun.y=mean, geom="line",linetype=1, size=1.5,show.legend=FALSE)+
+  facet_wrap(~ID,nrow =2)+
+  labs(title='MAXIMUM TOLERATED DOSE',y="B")+
+  theme(text=element_text(size=20),plot.title = element_text(hjust = 0.5),
+        legend.text=element_text(size=20),legend.position = "bottom",aspect.ratio = 0.75)
+
+##CG group
+ggplot(data=subset(data1,GROUP=='CG'),aes(x=DAY, y=B, linetype=TUMOR))+theme_bw()+
+  geom_point(aes(color=TUMOR), position=pd, size=2, show.legend = FALSE)+
+  geom_line(aes(color=factor(TUMOR)), position=pd,size=2, linetype="solid")+
+  scale_x_continuous(breaks=seq(1,6,1))+
+  geom_errorbar(aes(ymin=Bmin, ymax=Bmax,
+                    color=factor(TUMOR),
+                    linetype=NULL), width=0.5,position=pd,size=1,show.legend = FALSE)+
+  scale_color_viridis_d(end = 0.75)+
+  guides(color = guide_legend(override.aes = list(size = 6)))+
+  stat_summary(aes(group=GROUP), fun.y=mean, geom="line",linetype=1, size=1.5,show.legend=FALSE)+
+  facet_wrap(~ID,nrow =2)+
+  labs(title='CONTROL',y="B")+
+  theme(text=element_text(size=20),plot.title = element_text(hjust = 0.5),
+        legend.text=element_text(size=20),legend.position = "bottom",aspect.ratio = 0.75)
+
 ############################################################################
 ############################################################################
 pd=position_dodge(1.0)
