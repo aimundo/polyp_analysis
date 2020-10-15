@@ -56,10 +56,84 @@ DeoxyHbmeans$DeoxyHbSD<-DeoxyHbstd$x
 
 
 ###plotting mean values####
-ggplot(means1,aes(x=time,y=STO2))+geom_line()+geom_errorbar(aes(ymin=STO2-SDSTO2,ymax=STO2+SDSTO2,color=group),width=0.4, size=0.9,position=pd)+facet_wrap(~group) #plot mean StO2 values
-ggplot(means2,aes(x=time,y=HB))+geom_line()+facet_wrap(~group) #plot mean Hb values
-ggplot(OxyHbmeans,aes(x=time,y=OxyHemoglobin))+geom_line()+geom_errorbar(aes(ymin=OxyHemoglobin-OxyHbSD,ymax=OxyHemoglobin+OxyHbSD,color=group),width=0.4, size=0.9,position=pd)+facet_wrap(~group) #plot mean scattering coeff values
-ggplot(means3,aes(x=time,y=A))+geom_line()+facet_wrap(~group) #plot mean scattering coeff values
+ggplot(means1,aes(x=time,y=STO2))+geom_line(size=2)+
+  geom_errorbar(aes(ymin=STO2-SDSTO2,ymax=STO2+SDSTO2),width=0.4, size=0.9,position=pd)+
+  labs(y="Oxygen Saturation (%)")+facet_wrap(~group)+
+  ggtitle("Oxygen saturation") #plot mean StO2 values
+
+
+ggplot(means2,aes(x=time,y=HB))+geom_line(size=2)+geom_errorbar(aes(ymin=HB-HBSD,ymax=HB+HBSD),width=0.4, size=0.9,position=pd)+facet_wrap(~group)+ggtitle("total Hemoglobin")+labs(y="total Hemoglobin (mg/mL)") #plot mean Hb values
+ggplot(OxyHbmeans,aes(x=time,y=OxyHemoglobin))+geom_line(size=2)+geom_errorbar(aes(ymin=OxyHemoglobin-OxyHbSD,ymax=OxyHemoglobin+OxyHbSD),width=0.4, size=0.9,position=pd)+facet_wrap(~group)+ggtitle("Oxy Hemoglobin")+labs(y="Oxyhemoglobin(mg/mL)") #plot HbO2
+ggplot(DeoxyHbmeans,aes(x=time,y=DeoxyHemoglobin))+geom_line(size=2)+geom_errorbar(aes(ymin=DeoxyHemoglobin-DeoxyHbSD,ymax=DeoxyHemoglobin+DeoxyHbSD),width=0.4, size=0.9,position=pd)+facet_wrap(~group)+ggtitle("Deoxyhemoglobin")+labs(y="Deoxyhemoglobin (mg/mL)") #plot mean scattering coeff values
+ggplot(means3,aes(x=time,y=A))+geom_line(size=2)+geom_errorbar(aes(ymin=A-ASD,ymax=A+ASD),width=0.4, size=0.9,position=pd)+facet_wrap(~group)+ggtitle("Scattering Coefficient (A)")+labs(y="Scattering coefficient (A)") #plot mean scattering coeff values
+
+#Extract initial values per group
+StO2basevals<-means1[means1$time==1, c("group", "STO2")] #extract initial StO2 values per group
+means1<-merge(means1,StO2basevals, by.x="group", by.y='group',suffixes = c("","basevalue"))#copy StO2 base values per group
+
+Hbbasevals<-means2[means2$time==1,c("group",'HB')] #extract initial Hb values per group
+means2<-merge(means2,Hbbasevals, by.x="group", by.y='group',suffixes = c("","basevalue"))#copy StO2 base values per group
+
+
+OxyHbbasevals<-OxyHbmeans[OxyHbmeans$time==1, c("group", "OxyHemoglobin")] #extract initial HbO2 values per group
+OxyHbmeans<-merge(OxyHbmeans,OxyHbbasevals, by.x="group", by.y='group',suffixes = c("","basevalue"))#copy HbO2 base values per group
+
+
+DeoxyHbbasevals<-DeoxyHbmeans[DeoxyHbmeans$time==1, c("group", "DeoxyHemoglobin")] #extract initial Hb values per group
+DeoxyHbmeans<-merge(DeoxyHbmeans,DeoxyHbbasevals, by.x="group", by.y='group',suffixes = c("","basevalue"))#copy Hb base values per group
+
+Abasevals<-means3[means3$time==1, c("group", "A")] #extract initial StO2 values per group
+means3<-merge(means3,Abasevals, by.x="group", by.y='group',suffixes = c("","basevalue"))#copy StO2 base values per group
+
+##getting a subset of StO2 values without NAs
+library(dplyr)
+Trimmed<-data1%>%filter(!is.na(STO2)) #extracting the non NA values 
+Numbers<-aggregate(Trimmed$STO2, by=list(time=Trimmed$DAY,group=Trimmed$GROUP),FUN=length) #counting the number of occurrences per group per week
+names(Numbers)<-c('Week','Group','Observations')
+#Calculate fold change and pasting number of observations per group per week
+##StO2
+means1$StO2foldchange<-means1$STO2/means1$STO2basevalue #Mean StO2 fold change
+means1$Observations<-Numbers$Observations
+means1$StandErr<-means1$SDSTO2/(means1$Observations)^0.5
+means1$FoldErr<-means1$StandErr/means1$STO2basevalue
+
+
+##total hemoglobin
+means2$Hbfoldchange<-means2$HB/means2$HBbasevalue #Mean Hb fold change
+means2$Observations<-Numbers$Observations
+means2$StandErr<-means2$HBSD/(means2$Observations)^0.5
+means2$FoldErr<-means2$StandErr/means2$HBbasevalue
+
+##A (reduced scattering coefficient)
+means3$Afoldchange<-means3$A/means3$Abasevalue #Mean A fold change
+means3$Observations<-Numbers$Observations
+means3$StandErr<-means3$ASD/(means3$Observations)^0.5
+means3$FoldErr<-means3$StandErr/means3$Abasevalue
+###HbO2####
+OxyHbmeans$OxyHbfoldchange<-OxyHbmeans$OxyHemoglobin/OxyHbmeans$OxyHemoglobinbasevalue
+OxyHbmeans$Observations<-Numbers$Observations
+OxyHbmeans$StandErr<-OxyHbmeans$OxyHbSD/(OxyHbmeans$Observations)
+OxyHbmeans$FoldErr<-OxyHbmeans$StandErr/OxyHbmeans$OxyHemoglobinbasevalue
+
+##Hb###
+DeoxyHbmeans$DeoxyHbfoldchange<-DeoxyHbmeans$DeoxyHemoglobin/DeoxyHbmeans$DeoxyHemoglobinbasevalue
+DeoxyHbmeans$Observations<-Numbers$Observations
+DeoxyHbmeans$StandErr<-DeoxyHbmeans$DeoxyHbSD/(DeoxyHbmeans$Observations)
+DeoxyHbmeans$FoldErr<-DeoxyHbmeans$StandErr/DeoxyHbmeans$DeoxyHemoglobinbasevalue
+
+#plot fold changes
+pd=position_dodge(0.4)
+ggplot(means1,aes(x=time, y=StO2foldchange))+theme_bw()+geom_point(aes(color=group,group=group),size=2, position=pd)+geom_line(aes(color=group,group=group),size=1.5,position=pd)+geom_errorbar(aes(ymin=StO2foldchange-FoldErr,ymax=StO2foldchange+FoldErr,color=group),width=0.4, size=0.9,position=pd)+theme(text=element_text(size=30),aspect.ratio = 1)+scale_x_continuous(breaks=seq(1,6,1))+labs(title=expression(StO[2]), y='', x='Weeks')+theme(plot.title = element_text(hjust = 0.5)) #plot StO2 fold change
+ggplot(means2,aes(x=time, y=Hbfoldchange))+theme_bw()+geom_point(aes(color=group,group=group),size=2, position=pd)+geom_line(aes(color=group,group=group),size=1.5, position=pd)+geom_errorbar(aes(ymin=Hbfoldchange-FoldErr,ymax=Hbfoldchange+FoldErr,color=group),width=0.4, size=0.9, position=pd)+theme(text=element_text(size=30),aspect.ratio = 1)+scale_x_continuous(breaks=seq(1,6,1))+labs(title=expression(tHb), y='', x='Weeks')+theme(plot.title = element_text(hjust = 0.5)) #plot Hb fold change
+ggplot(means3,aes(x=time, y=Afoldchange))+theme_bw()+geom_point(aes(color=group,group=group),size=2, position=pd)+geom_line(aes(color=group,group=group),size=1.5, position=pd)+geom_errorbar(aes(ymin=Afoldchange-FoldErr,ymax=Afoldchange+FoldErr,color=group),width=0.4, size=0.9, position=pd)+theme(text=element_text(size=30),aspect.ratio = 1)+scale_x_continuous(breaks=seq(1,6,1))+labs(title=expression(mu[s]^{"'"}), y='', x='Weeks')+theme(plot.title = element_text(hjust = 0.5)) #plot A fold change
+ggplot(OxyHbmeans,aes(x=time, y=OxyHbfoldchange))+theme_bw()+geom_point(aes(color=group,group=group),size=2, position=pd)+geom_line(aes(color=group,group=group),size=1.5,position=pd)+geom_errorbar(aes(ymin=OxyHbfoldchange-FoldErr,ymax=OxyHbfoldchange+FoldErr,color=group),width=0.4, size=0.9,position=pd)+theme(text=element_text(size=30),aspect.ratio = 1)+scale_x_continuous(breaks=seq(1,6,1))+labs(title=expression(HbO[2]), y='', x='Weeks')+theme(plot.title = element_text(hjust = 0.5)) #plot HbO2 fold change
+ggplot(DeoxyHbmeans,aes(x=time, y=DeoxyHbfoldchange))+theme_bw()+geom_point(aes(color=group,group=group),size=2, position=pd)+geom_line(aes(color=group,group=group),size=1.5,position=pd)+geom_errorbar(aes(ymin=DeoxyHbfoldchange-FoldErr,ymax=DeoxyHbfoldchange+FoldErr,color=group),width=0.4, size=0.9,position=pd)+theme(text=element_text(size=30),aspect.ratio = 1)+scale_x_continuous(breaks=seq(1,6,1))+labs(title=expression(HbO), y='', x='Weeks')+theme(plot.title = element_text(hjust = 0.5)) #plot Hb fold change
+
+
+
+
+
+
 #StO2 plot per week per group with means ****best one****
 # pd=position_dodge(1.0)
 # ggplot(data1,aes(x=DAY, y=STO2, linetype=TUMOR))+theme_bw()+
