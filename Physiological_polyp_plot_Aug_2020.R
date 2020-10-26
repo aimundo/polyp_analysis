@@ -398,15 +398,15 @@ ggplot(data=subset(data1,GROUP=='CG'),aes(x=DAY, y=B, linetype=TUMOR))+theme_bw(
 ########
 ############################################################################
 pd=position_dodge(1.0)
-ggplot(data1,aes(x=Week, y=StO2, linetype=Treatment))+theme_bw()+
+ggplot(data1,aes(x=DAY, y=STO2, linetype=ID))+theme_bw()+
   theme(text=element_text(size=20))+
-  geom_point(aes(color=factor(Treatment)), position=pd, size=2,show.legend=FALSE)+
-  geom_line(aes(color=factor(Treatment)), linetype=1, position = pd,size=1.5,show.legend=TRUE)+
+  geom_point(aes(color=factor(ID)), position=pd, size=2,show.legend=FALSE)+
+  geom_line(aes(color=factor(ID)), linetype=1, position = pd,size=1.5,show.legend=TRUE)+
   scale_x_continuous(breaks=seq(1,6,1))+
-  geom_errorbar(aes(ymin=StO2min, ymax=StO2max,color=factor(Treatment),linetype=NULL), width=2,position=pd,size=0.9,show.legend = FALSE)+
-  stat_summary(aes(group=Treatment), fun.y=mean, geom="line",linetype=1, size=1.5,show.legend=FALSE)+
+  geom_errorbar(aes(ymin=STO2min, ymax=STO2max,color=factor(GROUP),linetype=NULL), width=2,position=pd,size=0.9,show.legend = FALSE)+
+  stat_summary(aes(group=GROUP), fun.y=mean, geom="line",linetype=1, size=1.5,show.legend=FALSE)+
   labs(title='',y="Oxygen Saturation(%)")+
-  facet_wrap(~Treatment)
+  facet_wrap(~GROUP)
 #########################################################################
 
 ############################################################################
