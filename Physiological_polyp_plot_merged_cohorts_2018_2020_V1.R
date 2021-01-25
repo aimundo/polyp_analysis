@@ -196,56 +196,61 @@ DeoxyHbmeans$StandErr<-DeoxyHbmeans$DeoxyHbSD/(DeoxyHbmeans$Observations)
 DeoxyHbmeans$FoldErr<-DeoxyHbmeans$StandErr/DeoxyHbmeans$DeoxyHemoglobinbasevalue
 
 #plot fold changes
+library(ggpubr)
 pd=position_dodge(0.4)
-ggplot(means1,aes(x=time, y=StO2foldchange))+theme_bw()+geom_point(aes(color=group,group=group),size=2, position=pd)+
-  geom_line(aes(color=group,group=group),size=1.5,position=pd)+
-  geom_errorbar(aes(ymin=StO2foldchange-FoldErr,ymax=StO2foldchange+FoldErr,color=group),width=0.4, size=0.9,position=pd)+
-  theme(text=element_text(size=30),aspect.ratio = 1)+
-  scale_color_viridis_d(end = 0.8)+
+txt<-20
+p1<-ggplot(means1,aes(x=time, y=StO2foldchange))+theme_classic()+
+  geom_point(aes(color=group,group=group),size=2, position=pd,show.legend = FALSE)+
+  geom_line(aes(color=group,group=group),size=1.5,position=pd,show.legend = FALSE)+
+  geom_errorbar(aes(ymin=StO2foldchange-FoldErr,ymax=StO2foldchange+FoldErr,color=group),width=0.4, size=0.9,position=pd,show.legend = FALSE)+
+  scale_color_manual(values=c('gray','blue','red'))+
   scale_x_continuous(breaks=seq(1,6,1))+
-  labs(title=expression(StO[2]), y='', x='Weeks')+theme(plot.title = element_text(hjust = 0.5)) #plot StO2 fold change
+  labs(title=expression(StO[2]), subtitle='Oxygen Saturation',y='Fold Change', x='Weeks')+ #plot StO2 fold change
+  theme(plot.title = element_text(hjust = 0.5),text=element_text(size=txt),aspect.ratio = 1)
 
 
 
-
-ggplot(means2,aes(x=time, y=Hbfoldchange))+theme_bw()+geom_point(aes(color=group,group=group),size=2, position=pd)+
-  geom_line(aes(color=group,group=group),size=1.5, position=pd)+
-  geom_errorbar(aes(ymin=Hbfoldchange-FoldErr,ymax=Hbfoldchange+FoldErr,color=group),width=0.4, size=0.9, position=pd)+
-  theme(text=element_text(size=30),aspect.ratio = 1)+
-  scale_color_viridis_d(end = 0.8)+
+p2<-ggplot(means2,aes(x=time, y=Hbfoldchange))+theme_classic()+
+  geom_point(aes(color=group,group=group),size=2, position=pd,show.legend = FALSE)+
+  geom_line(aes(color=group,group=group),size=1.5, position=pd,show.legend = FALSE)+
+  geom_errorbar(aes(ymin=Hbfoldchange-FoldErr,ymax=Hbfoldchange+FoldErr,color=group),width=0.4, size=0.9, position=pd,show.legend = FALSE)+
+  theme(text=element_text(size=txt),aspect.ratio = 1)+
+  scale_color_manual(values=c('gray','blue','red'))+
   scale_x_continuous(breaks=seq(1,6,1))+
-  labs(title=expression(tHb), y='', x='Weeks')+theme(plot.title = element_text(hjust = 0.5)) #plot Hb fold change
+  labs(title=expression(tHb), subtitle='Total Hemoglobin',y='', x='Weeks')+theme(plot.title = element_text(hjust = 0.5)) #plot Hb fold change
 
 
-ggplot(means3,aes(x=time, y=Afoldchange))+theme_bw()+geom_point(aes(color=group,group=group),size=2, position=pd)+
-  geom_line(aes(color=group,group=group),size=1.5, position=pd)+
-  geom_errorbar(aes(ymin=Afoldchange-FoldErr,ymax=Afoldchange+FoldErr,color=group),width=0.4, size=0.9, position=pd)+theme(text=element_text(size=30),aspect.ratio = 1)+
-  scale_color_viridis_d(end = 0.8)+
+p3<-ggplot(means3,aes(x=time, y=Afoldchange))+theme_classic()+
+  geom_point(aes(color=group,group=group),size=2, position=pd,show.legend = FALSE)+
+  geom_line(aes(color=group,group=group),size=1.5, position=pd,show.legend = FALSE)+
+  geom_errorbar(aes(ymin=Afoldchange-FoldErr,ymax=Afoldchange+FoldErr,color=group),width=0.4, size=0.9, position=pd,show.legend = FALSE)+
+  theme(text=element_text(size=txt),aspect.ratio = 1)+
+  scale_color_manual(values=c('gray','blue','red'))+
   scale_x_continuous(breaks=seq(1,6,1))+labs(title=expression(mu[s]^{"'"}), y='', x='Weeks')+
   theme(plot.title = element_text(hjust = 0.5)) #plot A fold change
 
 
-ggplot(OxyHbmeans,aes(x=time, y=OxyHbfoldchange))+theme_bw()+
-  geom_point(aes(color=group,group=group),size=2, position=pd)+
-  geom_line(aes(color=group,group=group),size=1.5,position=pd)+
-  geom_errorbar(aes(ymin=OxyHbfoldchange-FoldErr,ymax=OxyHbfoldchange+FoldErr,color=group),width=0.4, size=0.9,position=pd)+
-  scale_color_viridis_d(end = 0.8)+
-  theme(text=element_text(size=30),aspect.ratio = 1)+scale_x_continuous(breaks=seq(1,6,1))+
-  labs(title=expression(HbO[2]), y='', x='Weeks')+theme(plot.title = element_text(hjust = 0.5)) #plot HbO2 fold change
+p4<-ggplot(OxyHbmeans,aes(x=time, y=OxyHbfoldchange))+theme_classic()+
+  geom_point(aes(color=group,group=group),size=2, position=pd,show.legend = FALSE)+
+  geom_line(aes(color=group,group=group),size=1.5,position=pd,show.legend = FALSE)+
+  geom_errorbar(aes(ymin=OxyHbfoldchange-FoldErr,ymax=OxyHbfoldchange+FoldErr,color=group),width=0.4, size=0.9,position=pd,show.legend = FALSE)+
+  scale_color_manual(values=c('gray','blue','red'))+
+  theme(text=element_text(size=txt),aspect.ratio = 1)+scale_x_continuous(breaks=seq(1,6,1))+
+  labs(title=expression(HbO[2]), subtitle='Oxyhemoglobin', y='', x='Weeks')+theme(plot.title = element_text(hjust = 0.5)) #plot HbO2 fold change
 
 
-ggplot(DeoxyHbmeans,aes(x=time, y=DeoxyHbfoldchange))+theme_bw()+
+p5<-ggplot(DeoxyHbmeans,aes(x=time, y=DeoxyHbfoldchange))+theme_classic()+
   geom_point(aes(color=group,group=group),size=2, position=pd)+
   geom_line(aes(color=group,group=group),size=1.5,position=pd)+
   geom_errorbar(aes(ymin=DeoxyHbfoldchange-FoldErr,ymax=DeoxyHbfoldchange+FoldErr,color=group),width=0.4, size=0.9,position=pd)+
-  theme(text=element_text(size=30),aspect.ratio = 1)+
-  scale_color_viridis_d(end = 0.8)+
+  theme(text=element_text(size=txt),aspect.ratio = 1)+
+  scale_color_manual(values=c('gray','blue','red'))+
   scale_x_continuous(breaks=seq(1,6,1))+
-  labs(title=expression(HbO), y='', x='Weeks')+theme(plot.title = element_text(hjust = 0.5)) #plot Hb fold change
+  labs(title=expression(HbO),subtitle='Deoxyhemoglobin', y='', x='Weeks')+theme(plot.title = element_text(hjust = 0.5)) #plot Hb fold change
 
+ggarrange(p1,p2,p4,p5,nrow=1,common.legend = TRUE)
 
-
-
+p1+p2+p4+p5+plot_layout(nrow=1,guides='collect')
 
 
 #StO2 plot per week per group with means ****best one****
