@@ -7,6 +7,7 @@ attach(data1)
 library("ggplot2")
 library(scales)
 library(nlme)
+library(patchwork)
 library(ggplot2)
 pd<-position_dodge(0.2)
 
@@ -250,7 +251,10 @@ p5<-ggplot(DeoxyHbmeans,aes(x=time, y=DeoxyHbfoldchange))+theme_classic()+
 
 ggarrange(p1,p2,p4,p5,nrow=1,common.legend = TRUE)
 
-p1+p2+p4+p5+plot_layout(nrow=1,guides='collect')
+p1+p2+p4+p5+
+  plot_layout(nrow=2)+
+  plot_annotation(tag_levels='A')&
+  theme(plot.tag=element_text(colour = 'blue'))
 
 
 #StO2 plot per week per group with means ****best one****
