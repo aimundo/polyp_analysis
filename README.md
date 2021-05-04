@@ -1,4 +1,4 @@
-# polyp_analysis
+# Analysis of longitudinal changes in perfusion markers in a primary model of colon cancer
 
 This repository contains diffuse reflectance spectroscopy (DRS) endoscopically derived perfusion markers of oxygen saturation, blood content and others, in a primary model
 of colorectal cancer. 
