@@ -5,6 +5,10 @@ format:
     theme: default
     toc: true
     number-sections: true
+execute:
+  warning: false
+editor_options: 
+  chunk_output_type: console
 ---
 
 Setup
@@ -20,6 +24,7 @@ library(patchwork)
 library(ggplot2)
 library(mgcv)
 library(tidyverse)
+library(gratia)
 
 ```
 
@@ -120,6 +125,8 @@ StO2_gam <- gam(STO2 ~ GROUP+s(DAY, by = GROUP, k = 6),
             method='REML',
             data  = data1)
 
+appraise(StO2_gam)
+
 #creates a dataframe using the length of the covariates for the GAM
 gam_predict_StO2 <- expand_grid(Group = factor(c("CG", "MG","MTD")),
                          Day = seq(0, 6, by = 1),
@@ -158,9 +165,9 @@ GAM_StO2_plot<-ggplot(data=data1, aes(x=DAY, y=STO2, group=GROUP)) +
   theme(
     axis.text=element_text(size=22)
   )+
-  scale_color_viridis_d(option="mako")
+  scale_color_viridis_d(option="magma",end=.7)
 
-GAM_StO2_plot
+model1<-GAM_StO2_plot+facet_wrap(~GROUP)
 ```
 
 OxyHemglobin GAM
@@ -208,9 +215,9 @@ GAM_HbO2_plot<-ggplot(data=data1, aes(x=DAY, y=HBO2, group=GROUP)) +
   theme(
     axis.text=element_text(size=22)
   )+
-  scale_color_viridis_d(option="mako")
+ scale_color_viridis_d(option="magma",end=.7)
 
-GAM_HbO2_plot
+model2<-GAM_HbO2_plot+facet_wrap(~GROUP)
 ```
 
 Total Hemoglobin GAM
@@ -258,9 +265,9 @@ GAM_HbO2_plot<-ggplot(data=data1, aes(x=DAY, y=HB, group=GROUP)) +
   theme(
     axis.text=element_text(size=22)
   )+
-  scale_color_viridis_d(option="mako")
+ scale_color_viridis_d(option="magma",end=.7)
 
-GAM_HbO2_plot
+model3<-GAM_HbO2_plot+facet_wrap(~GROUP)
 ```
 
 
@@ -309,7 +316,17 @@ GAM_HbO_plot<-ggplot(data=data1, aes(x=DAY, y=HBO, group=GROUP)) +
   theme(
     axis.text=element_text(size=22)
   )+
-  scale_color_viridis_d(option="mako")
+   scale_color_viridis_d(option="magma",end=.7)
 
-GAM_HbO_plot
+model4<-GAM_HbO_plot+facet_wrap(~GROUP)
+```
+
+
+Now, plot all the models at once to compare:
+
+```{r, plot all models}
+
+(model1+model2)/(model3+model4)
+
+
 ```
