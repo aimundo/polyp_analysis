@@ -1,8 +1,9 @@
 ---
-title: "DRS GAM models for complete data v1"
+title: "**DRS GAM models for complete data v1**"
+author: Ariel Mundo
 format:
   html:
-    theme: default
+    css: style.css
     toc: true
     number-sections: true
 execute:
@@ -13,7 +14,7 @@ editor_options:
 
 Setup
 
-```{r}
+```{r, echo=FALSE}
 library(readr)
 library(multcomp)
 library(here)
@@ -25,12 +26,15 @@ library(ggplot2)
 library(mgcv)
 library(tidyverse)
 library(gratia)
+library(showtext)
+font_add("Atkinson",regular="AtkinsonHyperlegible-Regular.ttf",italic="AtkinsonHyperlegible-Italic.ttf")
+showtext_auto()
 
 ```
 
 Load data. Variable `GROUP` needs to be a factor. Also, create the Oxyhemoglobin and Deoxyhemoglobin variables and add them to the dataframe.
 
-```{r,StO2 plot}
+```{r,StO2 plot, echo=TRUE}
 data1 <- read.csv(here("data","Extraction_merged_2018_2020_2021_cohorts_v1.csv"))
 
 data1$GROUP<-as.factor(data1$GROUP)
@@ -42,14 +46,20 @@ data1$HBO_SD<-data1$HB_SD*(1-data1$STO2)
 
 ```
 
-```{r, plots}
+We will plot all the raw data adding a `geom_smooth` line to have a sense of the trend of the data. **Ignore the confidence interval, the smooth is just to have a general idea.**
+
+```{r, plots, fig.width=14, fig.height=9, fig.fullwidth=TRUE}
 #StO2 plot per week per group with means ****best one****
 pd=position_dodge(0.2)
 
-p1<-ggplot(data1,aes(x=DAY, y=STO2))+theme_bw()+
-  theme(text=element_text(size=20))+
-  geom_point(aes(color=factor(GROUP)), position=pd, size=2)+
-  geom_smooth()+
+p1<-ggplot(data1,aes(x=DAY, y=STO2))+
+  theme_bw()+
+  geom_point(aes(color=factor(GROUP)), 
+             position=pd, 
+             size=4, 
+             alpha=0.6,
+             show.legend=FALSE)+
+ geom_smooth(show.legend=FALSE)+
   # stat_summary(aes(group=GROUP,
   #                  color=factor(GROUP)
   #                  ), 
@@ -60,14 +70,20 @@ p1<-ggplot(data1,aes(x=DAY, y=STO2))+theme_bw()+
   #              show.legend=FALSE
   #              )+
   scale_color_viridis_d(end = 0.8)+
-  labs(title='',y="Oxygen Saturation(%)")+
+  labs(title='',
+       x="Week",
+       y="Oxygen \nSaturation(%)")+
   facet_wrap(~GROUP,ncol=5)
 
 #Hb plot
-p2<-ggplot(data1,aes(x=DAY, y=HB))+theme_bw()+
-  theme(text=element_text(size=20))+
-  geom_point(aes(color=factor(GROUP)), position=pd, size=2)+
-    geom_smooth()+
+p2<-ggplot(data1,aes(x=DAY, y=HB))+
+  theme_bw()+
+  geom_point(aes(color=factor(GROUP)), 
+             position=pd, 
+             size=4, 
+             alpha=0.6,
+             show.legend=FALSE)+
+    geom_smooth(show.legend=FALSE)+
   # stat_summary(aes(group=GROUP,
   #                  color=factor(GROUP)
   #                  ), 
@@ -77,14 +93,20 @@ p2<-ggplot(data1,aes(x=DAY, y=HB))+theme_bw()+
   #              size=1.5,
   #              show.legend=FALSE)+
   scale_color_viridis_d(end = 0.8)+
-  labs(title='',y="total Hb (mg/mL)")+
+  labs(title='',
+       x="Week",
+       y="total Hb \n(mg/mL)")+
   facet_wrap(~GROUP,ncol=5)
 
 #HbO2 plot
-p3<-ggplot(data1,aes(x=DAY, y=HBO2))+theme_bw()+
-  theme(text=element_text(size=20))+
-  geom_point(aes(color=factor(GROUP)), position=pd, size=2)+
-  geom_smooth()+
+p3<-ggplot(data1,aes(x=DAY, y=HBO2))+
+  theme_bw()+
+  geom_point(aes(color=factor(GROUP)), 
+             position=pd, 
+             size=4, 
+             alpha=0.6,
+             show.legend=FALSE)+
+  geom_smooth(show.legend=FALSE)+
   # stat_summary(aes(group=GROUP,
   #                  color=factor(GROUP)
   #                  ), 
@@ -94,15 +116,20 @@ p3<-ggplot(data1,aes(x=DAY, y=HBO2))+theme_bw()+
   #              size=1.5,
   #              show.legend=FALSE)+
   scale_color_viridis_d(end = 0.8)+
-  labs(title='',y="Oxyhemoglobin (mg/mL)")+
+  labs(title='',
+       x="Week",
+       y="Oxyhemoglobin \n(mg/mL)")+
   facet_wrap(~GROUP,ncol=5)
 
 #HbO plot
 
-p4<-ggplot(data1,aes(x=DAY, y=HBO))+theme_bw()+
-  theme(text=element_text(size=20))+
-  geom_point(aes(color=factor(GROUP)), position=pd, size=2)+
-  geom_smooth()+
+p4<-ggplot(data1,aes(x=DAY, y=HBO))+
+  theme_bw()+
+  geom_point(aes(color=factor(GROUP)), 
+             position=pd,  
+             alpha=0.6,
+             size=4)+
+  geom_smooth(show.legend=FALSE)+
   # stat_summary(aes(group=GROUP,
   #                  color=factor(GROUP)
   #                  ), 
@@ -112,15 +139,25 @@ p4<-ggplot(data1,aes(x=DAY, y=HBO))+theme_bw()+
   #              size=1.5,
   #              show.legend=FALSE)+
   scale_color_viridis_d(end = 0.8)+
-  labs(title='',y="Deoxyhemoglobin (mg/mL)")+
+  labs(title='',
+       x="Week",
+       y="Deoxyhemoglobin \n(mg/mL)")+
   facet_wrap(~GROUP,ncol=5)
 
-p1+p2+p3+p4
+p1+p2+p3+p4 &
+  theme(text=element_text(family="Atkinson",size=60))
 ```
 
 GAM with interaction of group and time:
+All models will follow the same basic construction:
+
+`model<-gam(Variable~Group+s(Day,by=Group=k=6,` \n
+`method= 'REML',`\n
+`data=data1)`
 
 ```{r, StO2 GAM}
+pnt<-4
+al<-0.3
 StO2_gam <- gam(STO2 ~ GROUP+s(DAY, by = GROUP, k = 6),
             method='REML',
             data  = data1)
@@ -144,7 +181,7 @@ gam_predict_StO2<-gam_predict_StO2%>%
 
 #plot smooths and confidence interval for GAM
 GAM_StO2_plot<-ggplot(data=data1, aes(x=DAY, y=STO2, group=GROUP)) +
-    geom_point(aes(color=GROUP),size=1.5,alpha=0.5,show.legend = FALSE)+
+    geom_point(aes(color=GROUP),size=pnt,alpha=al,show.legend = FALSE)+
   geom_ribbon(aes( x=DAY,ymin=(fit - 2*se.fit), 
                    ymax=(fit + 2*se.fit),
                    fill=GROUP
@@ -159,12 +196,9 @@ GAM_StO2_plot<-ggplot(data=data1, aes(x=DAY, y=STO2, group=GROUP)) +
             data=gam_predict_StO2,
               show.legend = FALSE)+
   #facet_wrap(~Group)+
-  labs(y=expression(atop(StO[2],'complete')))+
+  labs(y=expression(atop(StO[2],'complete')),x="Week")+
     scale_x_continuous(breaks=c(0,2,4,6))+
       theme_classic()+
-  theme(
-    axis.text=element_text(size=22)
-  )+
   scale_color_viridis_d(option="magma",end=.7)
 
 model1<-GAM_StO2_plot+facet_wrap(~GROUP)
@@ -194,7 +228,7 @@ gam_predict_HbO2<-gam_predict_HbO2%>%
 
 #plot smooths and confidence interval for GAM
 GAM_HbO2_plot<-ggplot(data=data1, aes(x=DAY, y=HBO2, group=GROUP)) +
-    geom_point(aes(color=GROUP),size=1.5,alpha=0.5,show.legend = FALSE)+
+    geom_point(aes(color=GROUP),size=pnt,alpha=al,show.legend = FALSE)+
   geom_ribbon(aes( x=DAY,ymin=(fit - 2*se.fit), 
                    ymax=(fit + 2*se.fit),
                    fill=GROUP
@@ -209,12 +243,9 @@ GAM_HbO2_plot<-ggplot(data=data1, aes(x=DAY, y=HBO2, group=GROUP)) +
             data=gam_predict_HbO2,
               show.legend = FALSE)+
   #facet_wrap(~Group)+
-  labs(y=expression(atop(HbO[2],'complete')))+
+  labs(y=expression(atop(HbO[2],'complete')),x="Week")+
     scale_x_continuous(breaks=c(0,2,4,6))+
       theme_classic()+
-  theme(
-    axis.text=element_text(size=22)
-  )+
  scale_color_viridis_d(option="magma",end=.7)
 
 model2<-GAM_HbO2_plot+facet_wrap(~GROUP)
@@ -223,48 +254,45 @@ model2<-GAM_HbO2_plot+facet_wrap(~GROUP)
 Total Hemoglobin GAM
 
 ```{r, tHb GAM}
-Hb_gam <- gam(HB ~ GROUP+s(DAY, by = GROUP, k = 6),
+tHb_gam <- gam(HB ~ GROUP+s(DAY, by = GROUP, k = 6),
             method='REML',
             data  = data1)
 
 #creates a dataframe using the length of the covariates for the GAM
-gam_predict_Hb <- expand_grid(Group = factor(c("CG", "MG","MTD")),
+gam_predict_tHb <- expand_grid(Group = factor(c("CG", "MG","MTD")),
                          Day = seq(0, 6, by = 1),
                          subject=factor(data1$ID))
 
-gam_predict_Hb<-data1[,1:4]
+gam_predict_tHb<-data1[,1:4]
 
 
-gam_predict_Hb<-gam_predict_Hb%>%
-    mutate(fit = predict(Hb_gam,gam_predict_Hb,se.fit = TRUE,type='response')$fit,
-           se.fit = predict(Hb_gam, gam_predict_Hb,se.fit = TRUE,type='response')$se.fit)
+gam_predict_tHb<-gam_predict_tHb%>%
+    mutate(fit = predict(tHb_gam,gam_predict_tHb,se.fit = TRUE,type='response')$fit,
+           se.fit = predict(tHb_gam, gam_predict_tHb,se.fit = TRUE,type='response')$se.fit)
 
 
 #plot model
 
 #plot smooths and confidence interval for GAM
 GAM_tHb_plot<-ggplot(data=data1, aes(x=DAY, y=HB, group=GROUP)) +
-    geom_point(aes(color=GROUP),size=1.5,alpha=0.5,show.legend = FALSE)+
+    geom_point(aes(color=GROUP),size=pnt,alpha=al,show.legend = FALSE)+
   geom_ribbon(aes( x=DAY,ymin=(fit - 2*se.fit), 
                    ymax=(fit + 2*se.fit),
                    fill=GROUP
                    ),
               alpha=0.3,
-              data=gam_predict_Hb,
+              data=gam_predict_tHb,
             show.legend=FALSE,
                 inherit.aes=FALSE) +
   geom_line(aes(y=fit,
                 color=GROUP),
               size=1,
-            data=gam_predict_Hb,
+            data=gam_predict_tHb,
               show.legend = FALSE)+
   #facet_wrap(~Group)+
-  labs(y="Hb")+
+  labs(y="tHb",x="Week")+
     scale_x_continuous(breaks=c(0,2,4,6))+
       theme_classic()+
-  theme(
-    axis.text=element_text(size=22)
-  )+
  scale_color_viridis_d(option="magma",end=.7)
 
 model3<-GAM_tHb_plot+facet_wrap(~GROUP)
@@ -274,6 +302,7 @@ model3<-GAM_tHb_plot+facet_wrap(~GROUP)
 Deoxyhemoglobin GAM
 
 ```{r, HbO GAM}
+
 HbO_gam <- gam(HBO ~ GROUP+s(DAY, by = GROUP, k = 6),
             method='REML',
             data  = data1)
@@ -295,7 +324,7 @@ gam_predict_HbO<-gam_predict_HbO2%>%
 
 #plot smooths and confidence interval for GAM
 GAM_HbO_plot<-ggplot(data=data1, aes(x=DAY, y=HBO, group=GROUP)) +
-    geom_point(aes(color=GROUP),size=1.5,alpha=0.5,show.legend = FALSE)+
+    geom_point(aes(color=GROUP),size=pnt,alpha=al,show.legend = FALSE)+
   geom_ribbon(aes( x=DAY,ymin=(fit - 2*se.fit), 
                    ymax=(fit + 2*se.fit),
                    fill=GROUP
@@ -310,12 +339,9 @@ GAM_HbO_plot<-ggplot(data=data1, aes(x=DAY, y=HBO, group=GROUP)) +
             data=gam_predict_HbO,
               show.legend = FALSE)+
   #facet_wrap(~Group)+
-  labs(y=expression(atop(HbO,'complete')))+
+  labs(y=expression(atop(HbO,'complete')),x="Week")+
     scale_x_continuous(breaks=c(0,2,4,6))+
       theme_classic()+
-  theme(
-    axis.text=element_text(size=22)
-  )+
    scale_color_viridis_d(option="magma",end=.7)
 
 model4<-GAM_HbO_plot+facet_wrap(~GROUP)
@@ -324,12 +350,11 @@ model4<-GAM_HbO_plot+facet_wrap(~GROUP)
 
 Now, plot all the models at once to compare:
 
-```{r, plot all models}
+```{r, plot all models,fig.width=14,fig.height=9}
 
 (model1+model2)/(model3+model4)+
-  plot_annotation(tag_levels = c('A', '1'),
-                  theme = theme(plot.title = element_text(size = 25))
-                  )
+  plot_annotation(tag_levels="A")& 
+  theme(text=element_text(size=50,family="Atkinson"))
 
 
 ```
