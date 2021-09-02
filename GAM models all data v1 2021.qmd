@@ -222,7 +222,7 @@ model2<-GAM_HbO2_plot+facet_wrap(~GROUP)
 
 Total Hemoglobin GAM
 
-```{r, Hb GAM}
+```{r, tHb GAM}
 Hb_gam <- gam(HB ~ GROUP+s(DAY, by = GROUP, k = 6),
             method='REML',
             data  = data1)
@@ -235,7 +235,7 @@ gam_predict_Hb <- expand_grid(Group = factor(c("CG", "MG","MTD")),
 gam_predict_Hb<-data1[,1:4]
 
 
-gam_predict_Hb<-gam_predict_HbO2%>%
+gam_predict_Hb<-gam_predict_Hb%>%
     mutate(fit = predict(Hb_gam,gam_predict_Hb,se.fit = TRUE,type='response')$fit,
            se.fit = predict(Hb_gam, gam_predict_Hb,se.fit = TRUE,type='response')$se.fit)
 
@@ -243,7 +243,7 @@ gam_predict_Hb<-gam_predict_HbO2%>%
 #plot model
 
 #plot smooths and confidence interval for GAM
-GAM_HbO2_plot<-ggplot(data=data1, aes(x=DAY, y=HB, group=GROUP)) +
+GAM_tHb_plot<-ggplot(data=data1, aes(x=DAY, y=HB, group=GROUP)) +
     geom_point(aes(color=GROUP),size=1.5,alpha=0.5,show.legend = FALSE)+
   geom_ribbon(aes( x=DAY,ymin=(fit - 2*se.fit), 
                    ymax=(fit + 2*se.fit),
@@ -259,7 +259,7 @@ GAM_HbO2_plot<-ggplot(data=data1, aes(x=DAY, y=HB, group=GROUP)) +
             data=gam_predict_Hb,
               show.legend = FALSE)+
   #facet_wrap(~Group)+
-  labs(y=expression(atop(Hb[2],'complete')))+
+  labs(y="Hb")+
     scale_x_continuous(breaks=c(0,2,4,6))+
       theme_classic()+
   theme(
@@ -267,7 +267,7 @@ GAM_HbO2_plot<-ggplot(data=data1, aes(x=DAY, y=HB, group=GROUP)) +
   )+
  scale_color_viridis_d(option="magma",end=.7)
 
-model3<-GAM_HbO2_plot+facet_wrap(~GROUP)
+model3<-GAM_tHb_plot+facet_wrap(~GROUP)
 ```
 
 
@@ -326,7 +326,10 @@ Now, plot all the models at once to compare:
 
 ```{r, plot all models}
 
-(model1+model2)/(model3+model4)
+(model1+model2)/(model3+model4)+
+  plot_annotation(tag_levels = c('A', '1'),
+                  theme = theme(plot.title = element_text(size = 25))
+                  )
 
 
 ```
