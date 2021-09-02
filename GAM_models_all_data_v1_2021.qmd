@@ -1,5 +1,5 @@
 ---
-title: "**DRS GAM models for complete data v1**"
+title: "**DRS GAMs FOR COMPLETE DATA SET V1**"
 author: Ariel Mundo
 format:
   html:
@@ -8,11 +8,12 @@ format:
     number-sections: true
 execute:
   warning: false
+  keep-md: true
 editor_options: 
   chunk_output_type: console
 ---
 
-Setup
+# Setup
 
 ```{r, echo=FALSE}
 library(readr)
@@ -48,6 +49,7 @@ data1$HBO_SD<-data1$HB_SD*(1-data1$STO2)
 
 We will plot all the raw data adding a `geom_smooth` line to have a sense of the trend of the data. **Ignore the confidence interval, the smooth is just to have a general idea.**
 
+# Plots
 ```{r, plots, fig.width=14, fig.height=9, fig.fullwidth=TRUE}
 #StO2 plot per week per group with means ****best one****
 pd=position_dodge(0.2)
@@ -145,8 +147,10 @@ p4<-ggplot(data1,aes(x=DAY, y=HBO))+
   facet_wrap(~GROUP,ncol=5)
 
 p1+p2+p3+p4 &
-  theme(text=element_text(family="Atkinson",size=60))
+  theme(text=element_text(family="Atkinson",size=20))
 ```
+
+# GAMs
 
 GAM with interaction of group and time:
 All models will follow the same basic construction:
@@ -157,7 +161,7 @@ All models will follow the same basic construction:
 
 ```{r, StO2 GAM}
 pnt<-4
-al<-0.3
+al<-0.2
 StO2_gam <- gam(STO2 ~ GROUP+s(DAY, by = GROUP, k = 6),
             method='REML',
             data  = data1)
@@ -165,11 +169,9 @@ StO2_gam <- gam(STO2 ~ GROUP+s(DAY, by = GROUP, k = 6),
 appraise(StO2_gam)
 
 #creates a dataframe using the length of the covariates for the GAM
-gam_predict_StO2 <- expand_grid(Group = factor(c("CG", "MG","MTD")),
-                         Day = seq(0, 6, by = 1),
-                         subject=factor(data1$ID))
-
-gam_predict_StO2<-data1[,1:4]
+gam_predict_StO2 <- expand_grid(GROUP = factor(c("CG", "MG","MTD")),
+                         DAY = seq(1, 6, by = 0.1),
+                         ID=factor(data1$ID))
 
 
 gam_predict_StO2<-gam_predict_StO2%>%
@@ -192,7 +194,7 @@ GAM_StO2_plot<-ggplot(data=data1, aes(x=DAY, y=STO2, group=GROUP)) +
                 inherit.aes=FALSE) +
   geom_line(aes(y=fit,
                 color=GROUP),
-              size=1,
+              size=2,
             data=gam_predict_StO2,
               show.legend = FALSE)+
   #facet_wrap(~Group)+
@@ -212,11 +214,9 @@ HbO2_gam <- gam(HBO2 ~ GROUP+s(DAY, by = GROUP, k = 6),
             data  = data1)
 
 #creates a dataframe using the length of the covariates for the GAM
-gam_predict_HbO2 <- expand_grid(Group = factor(c("CG", "MG","MTD")),
-                         Day = seq(0, 6, by = 1),
-                         subject=factor(data1$ID))
-
-gam_predict_HbO2<-data1[,1:4]
+gam_predict_HbO2 <- expand_grid(GROUP = factor(c("CG", "MG","MTD")),
+                         DAY = seq(1, 6, by = 0.1),
+                         ID=factor(data1$ID))
 
 
 gam_predict_HbO2<-gam_predict_HbO2%>%
@@ -239,7 +239,7 @@ GAM_HbO2_plot<-ggplot(data=data1, aes(x=DAY, y=HBO2, group=GROUP)) +
                 inherit.aes=FALSE) +
   geom_line(aes(y=fit,
                 color=GROUP),
-              size=1,
+              size=2,
             data=gam_predict_HbO2,
               show.legend = FALSE)+
   #facet_wrap(~Group)+
@@ -259,11 +259,9 @@ tHb_gam <- gam(HB ~ GROUP+s(DAY, by = GROUP, k = 6),
             data  = data1)
 
 #creates a dataframe using the length of the covariates for the GAM
-gam_predict_tHb <- expand_grid(Group = factor(c("CG", "MG","MTD")),
-                         Day = seq(0, 6, by = 1),
-                         subject=factor(data1$ID))
-
-gam_predict_tHb<-data1[,1:4]
+gam_predict_tHb <- expand_grid(GROUP = factor(c("CG", "MG","MTD")),
+                         DAY = seq(1, 6, by = 0.1),
+                         ID=factor(data1$ID))
 
 
 gam_predict_tHb<-gam_predict_tHb%>%
@@ -286,7 +284,7 @@ GAM_tHb_plot<-ggplot(data=data1, aes(x=DAY, y=HB, group=GROUP)) +
                 inherit.aes=FALSE) +
   geom_line(aes(y=fit,
                 color=GROUP),
-              size=1,
+              size=2,
             data=gam_predict_tHb,
               show.legend = FALSE)+
   #facet_wrap(~Group)+
@@ -308,11 +306,9 @@ HbO_gam <- gam(HBO ~ GROUP+s(DAY, by = GROUP, k = 6),
             data  = data1)
 
 #creates a dataframe using the length of the covariates for the GAM
-gam_predict_HbO <- expand_grid(Group = factor(c("CG", "MG","MTD")),
-                         Day = seq(0, 6, by = 1),
-                         subject=factor(data1$ID))
-
-gam_predict_HbO<-data1[,1:4]
+gam_predict_HbO <- expand_grid(GROUP = factor(c("CG", "MG","MTD")),
+                         DAY = seq(1, 6, by = 0.1),
+                         ID=factor(data1$ID))
 
 
 gam_predict_HbO<-gam_predict_HbO2%>%
@@ -335,7 +331,7 @@ GAM_HbO_plot<-ggplot(data=data1, aes(x=DAY, y=HBO, group=GROUP)) +
                 inherit.aes=FALSE) +
   geom_line(aes(y=fit,
                 color=GROUP),
-              size=1,
+              size=2,
             data=gam_predict_HbO,
               show.legend = FALSE)+
   #facet_wrap(~Group)+
@@ -354,7 +350,7 @@ Now, plot all the models at once to compare:
 
 (model1+model2)/(model3+model4)+
   plot_annotation(tag_levels="A")& 
-  theme(text=element_text(size=50,family="Atkinson"))
+  theme(text=element_text(size=20,family="Atkinson"))
 
 
 ```
