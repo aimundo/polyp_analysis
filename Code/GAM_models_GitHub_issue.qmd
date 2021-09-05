@@ -1,0 +1,40 @@
+---
+title: "**DRS GAMs FOR COMPLETE DATA SET V1**"
+author: Ariel Mundo
+format:
+  html:
+    css: style.css
+    toc: true
+    number-sections: true
+execute:
+  warning: false
+editor_options: 
+  chunk_output_type: console
+---
+
+# Setup
+
+```{r, echo=FALSE, warning=FALSE}
+library(readr)
+library(multcomp)
+library(here)
+library(scales)
+library(viridis)
+library(nlme)
+library(patchwork)
+library(ggplot2)
+library(mgcv)
+library(tidyverse)
+library(gratia)
+library(showtext)
+font_add("Atkinson",regular="AtkinsonHyperlegible-Regular.ttf",italic="AtkinsonHyperlegible-Italic.ttf")
+showtext_auto()
+
+```
+
+Load data. Variable `GROUP` needs to be a factor. Also, create the Oxyhemoglobin and Deoxyhemoglobin variables and add them to the dataframe.
+
+```{r, plot}
+c1<-ggplot(mtcars, aes(x=wt,y=mpg))+geom_point()
+c1
+```
