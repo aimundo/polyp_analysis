@@ -15,20 +15,8 @@ editor_options:
 # Setup
 
 ```{r, echo=FALSE, warning=FALSE}
-library(readr)
-library(multcomp)
-library(here)
-library(scales)
-library(viridis)
-library(nlme)
-library(patchwork)
+
 library(ggplot2)
-library(mgcv)
-library(tidyverse)
-library(gratia)
-library(showtext)
-font_add("Atkinson",regular="AtkinsonHyperlegible-Regular.ttf",italic="AtkinsonHyperlegible-Italic.ttf")
-showtext_auto()
 
 ```
 

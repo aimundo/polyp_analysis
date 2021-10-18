@@ -58,8 +58,9 @@ DeoxyHbmeans$DeoxyHbSD<-DeoxyHbstd$x
 #StO2 plot per week per group with means ****best one****
 pd=position_dodge(1.0)
 ggplot(data1,aes(x=DAY, y=STO2))+theme_bw()+
-  theme(text=element_text(size=20))+
   geom_point(aes(color=factor(GROUP)), position=pd, size=2)+
+  theme(text=element_text(size=20), 
+        legend.title=element_blank())+
   stat_summary(aes(group=GROUP,color=factor(GROUP)), fun.y=mean, geom="line",linetype=1, size=1.5,show.legend=FALSE)+
   scale_color_viridis_d(end = 0.8)+
   labs(title='',y="Oxygen Saturation(%)")+
@@ -276,9 +277,9 @@ DeoxyHbmeans$FoldErr<-DeoxyHbmeans$StandErr
 
 #plot fold changes
 library(patchwork)
-library(ggsci)
+library(viridis)
 pd=position_dodge(0.4)
-thm1<-scale_color_aaas()
+thm1<-scale_color_viridis_d(option="mako",direction = -1,end=0.7)
 txt<-20
 clr<-c('gray31','blue3','red3')
 p1<-ggplot(data=means1,aes(x=time, y=Fold_change))+theme_classic()+
@@ -286,9 +287,9 @@ p1<-ggplot(data=means1,aes(x=time, y=Fold_change))+theme_classic()+
   geom_line(aes(color=group,group=group),size=1.5,position=pd,show.legend = FALSE)+
   geom_errorbar(aes(ymin=Fold_change-FoldErr,ymax=Fold_change+FoldErr,color=group),width=0.4, size=0.9,position=pd,show.legend = FALSE)+
   scale_x_continuous(breaks=seq(1,6,1))+
-  labs(title=expression(StO[2]),y='Fold Change', x='Weeks')+ #plot StO2 fold change
+  labs(title=expression(StO[2]),subtitle="Oxygen saturation",y='Fold Change', x='Weeks')+ #plot StO2 fold change
   theme(plot.title = element_text(hjust = 0.5),
-        plot.subtitle = element_text (size=14),
+        plot.subtitle = element_text (size=14,hjust=0.5),
         text=element_text(size=txt),
         aspect.ratio = 1)+
   thm1
@@ -339,8 +340,9 @@ p5<-ggplot(data=DeoxyHbmeans,aes(x=time, y=Fold_change))+theme_classic()+
   theme(text=element_text(size=txt),aspect.ratio = 1)+
   scale_x_continuous(breaks=seq(1,6,1))+
   labs(title=expression(HbO),subtitle='Deoxyhemoglobin', y='', x='Weeks')+
+  scale_color_manual(labels=c("Control","Metronomic", "Maximum Dose"))+
   theme(plot.title = element_text(hjust = 0.5),
-        plot.subtitle = element_text (size=14),
+        plot.subtitle = element_text (size=14, hjust=0.5),
         text=element_text(size=txt),
         aspect.ratio = 1)+
   thm1
@@ -350,8 +352,13 @@ p5<-ggplot(data=DeoxyHbmeans,aes(x=time, y=Fold_change))+theme_classic()+
 p1+p2+p4+p5+
   plot_layout(nrow=2)+
   plot_annotation(tag_levels='A')&
-  theme(plot.tag=element_text(colour = 'navyblue'))
+  theme(plot.tag=element_text(colour = 'black'))
 
+
+p1+p5+
+  plot_layout(nrow=1)+
+  plot_annotation(tag_levels='A')&
+  theme(plot.tag=element_text(colour = 'black'))
 
 #StO2 plot per week per group with means ****best one****
 # pd=position_dodge(1.0)
