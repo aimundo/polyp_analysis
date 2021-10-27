@@ -19,7 +19,6 @@ editor_options:
 library(here)
 library(scales)
 library(viridis)
-library(nlme)
 library(patchwork)
 library(mgcv)
 library(tidyverse)
@@ -70,7 +69,7 @@ ggplot(aes(x=DAY, y=STO2))+
 
 ```
 
-Hmmm... How about keeping only the observations that have a measurement at week 1?
+Hmmm... How about keeping only the observations that have a measurement at week 1? 
 
 
 ```{r,subset-data}
@@ -440,10 +439,10 @@ smooth_diff <- function(model, newdata, g1, g2, alpha = 0.05,
     row2 <- with(newdata, GROUP == g2)
     ## difference rows of xp for data from comparison
     X <- xp[row1, ] - xp[row2, ]
-    ## zero out cols of X related to splines for other lochs
+    ## zero out cols of X related to splines for other groups
     X[, ! (col1 | col2)] <- 0
     ## zero out the parametric cols
-    #X[, !grepl('^s\\(', colnames(xp))] <- 0
+    X[, !grepl('^s\\(', colnames(xp))] <- 0
     dif <- X %*% coef(model)
     se <- sqrt(rowSums((X %*% vcov(model, unconditional = unconditional)) * X))
     crit <- qt(alpha/2, df.residual(model), lower.tail = FALSE)
