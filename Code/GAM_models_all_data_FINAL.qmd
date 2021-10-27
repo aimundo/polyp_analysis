@@ -51,6 +51,59 @@ We will plot all the raw data adding a `geom_smooth` line to have a sense of the
 #StO2 plot per week per group with means ****best one****
 pd=position_dodge(0.2)
 
+data1 %>%
+  subset(GROUP=="MTD") %>%
+  group_by(ID) %>%
+ggplot(aes(x=DAY, y=STO2))+
+  theme_bw()+
+  geom_point(aes(color=factor(TUMOR)), 
+             position=pd, 
+             size=4, 
+             alpha=0.6,
+             show.legend=FALSE)+
+ geom_line(aes(color=factor(TUMOR)))+
+  scale_color_viridis_d(end = 0.8)+
+  labs(title='',
+       x="Week",
+       y="Oxygen \nSaturation(%)")+
+  facet_wrap(~ID,ncol=5)
+
+```
+
+Hmmm... How about keeping only the observations that have a measurement at week 1?
+
+
+```{r,subset-data}
+data2 <- subset(data1,DAY=1) %>%
+  group_by(ID,TUMOR) %>%
+  drop_na()
+  
+  
+data2 %>%
+  subset(GROUP=="MTD") %>%
+  group_by(ID) %>%
+ggplot(aes(x=DAY, y=STO2))+
+  theme_bw()+
+  geom_point(aes(color=factor(TUMOR)), 
+             position=pd, 
+             size=4, 
+             alpha=0.6,
+             show.legend=FALSE)+
+ geom_line(aes(color=factor(TUMOR)))+
+  scale_color_viridis_d(end = 0.8)+
+  labs(title='',
+       x="Week",
+       y="Oxygen \nSaturation(%)")+
+  facet_wrap(~ID,ncol=5)
+
+
+
+
+```
+
+
+
+```{r, plots-everything}
 p1<-ggplot(data1,aes(x=DAY, y=STO2))+
   theme_bw()+
   geom_point(aes(color=factor(GROUP)), 
@@ -146,6 +199,10 @@ p4<-ggplot(data1,aes(x=DAY, y=HBO))+
 p1+p2+p3+p4 &
   theme(text=element_text(family="Atkinson",size=20))
 ```
+
+What if we normalize each datapoint to the week 1 value?
+
+
 
 # GAMs
 

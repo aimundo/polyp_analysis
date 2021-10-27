@@ -1,14 +1,13 @@
 #code to plot the StO2 per group with errorbars
-library(readr)
-library(multcomp)
+
+
 library(here)
 library(scales)
 library(nlme)
 library(patchwork)
-library(ggplot2)
 library(tidyverse)
 pd<-position_dodge(0.2)
-data1 <- read.csv(here("data","Extraction_merged_2018_2020_2021_cohorts_v1.csv"))
+data1 <- read.csv(here("data","Extraction_merged_2018_2020_2021_cohorts_FINAL.csv"))
 attach(data1)
 data1$STO2min<-(data1$STO2-data1$STO2_SD)
 data1$STO2max<-(data1$STO2+data1$STO2_SD)
