@@ -69,33 +69,90 @@ ggplot(aes(x=DAY, y=STO2))+
 
 ```
 
-Hmmm... How about keeping only the observations that have a measurement at week 1? 
+Hmmm... How about normalizing everything by the mean value at wk 1 for each group? 
 
 
-```{r,subset-data}
-data2 <- subset(data1,DAY=1) %>%
-  group_by(ID,TUMOR) %>%
-  drop_na()
+```{r,mean-at_wk1}
+#get mean values per group at wk1
+
+mean_wk1 <- subset(data1, DAY==1) %>%
+  group_by(GROUP) %>%
+  summarise(baseline_StO2=mean(STO2, na.rm=TRUE),
+            baseline_HbO2=mean(HBO2, na.rm=TRUE),
+            baseline_HbO=mean(HBO, na.rm=TRUE),
+            baseline_tHb=mean(HB, na.rm=TRUE)
+            )
   
-  
-data2 %>%
-  subset(GROUP=="MTD") %>%
-  group_by(ID) %>%
-ggplot(aes(x=DAY, y=STO2))+
+#paste values back into the data1 dataframe
+data1<-left_join(data1,mean_wk1,by="GROUP")
+ 
+data1 %>%
+  group_by(GROUP) %>%
+  ggplot(aes(x=DAY, y=STO2/baseline_StO2))+
   theme_bw()+
   geom_point(aes(color=factor(TUMOR)), 
              position=pd, 
              size=4, 
              alpha=0.6,
              show.legend=FALSE)+
- geom_line(aes(color=factor(TUMOR)))+
+stat_summary(fun="median",colour="red",geom="line")+
   scale_color_viridis_d(end = 0.8)+
   labs(title='',
        x="Week",
-       y="Oxygen \nSaturation(%)")+
-  facet_wrap(~ID,ncol=5)
+       y="Oxygen \nSaturation(Fold change)")+
+  facet_wrap(~GROUP)
 
 
+data1 %>%
+  group_by(GROUP) %>%
+  ggplot(aes(x=DAY, y=HBO2/baseline_HbO2))+
+  theme_bw()+
+  geom_point(aes(color=factor(TUMOR)), 
+             position=pd, 
+             size=4, 
+             alpha=0.6,
+             show.legend=FALSE)+
+stat_summary(fun="median",colour="red",geom="line")+
+  scale_color_viridis_d(end = 0.8)+
+  labs(title='',
+       x="Week",
+       y="Oxyhemoglobin(Fold change)")+
+  facet_wrap(~GROUP)
+  
+
+data1 %>%
+  group_by(GROUP) %>%
+  ggplot(aes(x=DAY, y=HBO/baseline_HbO))+
+  theme_bw()+
+  geom_point(aes(color=factor(TUMOR)), 
+             position=pd, 
+             size=4, 
+             alpha=0.6,
+             show.legend=FALSE)+
+stat_summary(fun="median",colour="red",geom="line")+
+  scale_color_viridis_d(end = 0.8)+
+  labs(title='',
+       x="Week",
+       y="Deoxyhemoglobin(Fold change)")+
+  facet_wrap(~GROUP)
+# data2 %>%
+#   subset(GROUP=="MTD") %>%
+#   group_by(ID) %>%
+# ggplot(aes(x=DAY, y=STO2))+
+#   theme_bw()+
+#   geom_point(aes(color=factor(TUMOR)), 
+#              position=pd, 
+#              size=4, 
+#              alpha=0.6,
+#              show.legend=FALSE)+
+#  geom_line(aes(color=factor(TUMOR)))+
+#   scale_color_viridis_d(end = 0.8)+
+#   labs(title='',
+#        x="Week",
+#        y="Oxygen \nSaturation(%)")+
+#   facet_wrap(~ID,ncol=5)
+# 
+# 
 
 
 ```
