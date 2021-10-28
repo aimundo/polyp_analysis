@@ -135,6 +135,8 @@ stat_summary(fun="median",colour="red",geom="line")+
        x="Week",
        y="Deoxyhemoglobin(Fold change)")+
   facet_wrap(~GROUP)
+
+
 # data2 %>%
 #   subset(GROUP=="MTD") %>%
 #   group_by(ID) %>%
