@@ -71,6 +71,8 @@ ggplot(aes(x=DAY, y=STO2))+
 
 Hmmm... How about normalizing everything by the mean value at wk 1 for each group? 
 
+**EDIT**: Model was tried with fold change for StO2 and resulted in the exact same behavior by the smooths.
+
 
 ```{r,mean-at_wk1}
 #get mean values per group at wk1
@@ -86,82 +88,93 @@ mean_wk1 <- subset(data1, DAY==1) %>%
 #paste values back into the data1 dataframe
 data1<-left_join(data1,mean_wk1,by="GROUP")
  
-data1 %>%
+
+```
+
+```{r,plot-fold-changes}
+fold_StO2<-data1 %>%
   group_by(GROUP) %>%
   ggplot(aes(x=DAY, y=STO2/baseline_StO2))+
   theme_bw()+
-  geom_point(aes(color=factor(TUMOR)), 
+  geom_point(aes(color=factor(GROUP)), 
              position=pd, 
              size=4, 
-             alpha=0.6,
+             alpha=0.2,
              show.legend=FALSE)+
-stat_summary(fun="median",colour="red",geom="line")+
-  scale_color_viridis_d(end = 0.8)+
-  labs(title='',
+stat_summary(fun="median",aes(colour=GROUP),geom="line",size=2,
+             show.legend=FALSE)+
+  scale_color_viridis_d(option="magma",end=.7)+
+  labs(title='Oxygen Saturation',
        x="Week",
-       y="Oxygen \nSaturation(Fold change)")+
+       y="Fold change")+
   facet_wrap(~GROUP)
 
 
-data1 %>%
+fold_HbO2<-data1 %>%
   group_by(GROUP) %>%
   ggplot(aes(x=DAY, y=HBO2/baseline_HbO2))+
   theme_bw()+
-  geom_point(aes(color=factor(TUMOR)), 
+ geom_point(aes(color=factor(GROUP)),
              position=pd, 
              size=4, 
-             alpha=0.6,
+             alpha=0.2,
              show.legend=FALSE)+
-stat_summary(fun="median",colour="red",geom="line")+
-  scale_color_viridis_d(end = 0.8)+
-  labs(title='',
+stat_summary(fun="median",aes(colour=GROUP),geom="line",size=2,
+             show.legend=FALSE)+
+  scale_color_viridis_d(option="magma",end=.7)+
+  labs(title='Oxyhemoglobin',
        x="Week",
-       y="Oxyhemoglobin(Fold change)")+
+       y="Fold change")+
   facet_wrap(~GROUP)
   
 
-data1 %>%
+fold_HbO<-data1 %>%
   group_by(GROUP) %>%
   ggplot(aes(x=DAY, y=HBO/baseline_HbO))+
   theme_bw()+
-  geom_point(aes(color=factor(TUMOR)), 
+  geom_point(aes(color=factor(GROUP)),
              position=pd, 
              size=4, 
-             alpha=0.6,
+             alpha=0.2,
              show.legend=FALSE)+
-stat_summary(fun="median",colour="red",geom="line")+
-  scale_color_viridis_d(end = 0.8)+
-  labs(title='',
+stat_summary(fun="median",aes(colour=GROUP),geom="line",size=2,
+             show.legend=FALSE)+
+  scale_color_viridis_d(option="magma",end=.7)+
+  labs(title='Deoxyhemoglobin',
        x="Week",
-       y="Deoxyhemoglobin(Fold change)")+
+       y="Fold change")+
   facet_wrap(~GROUP)
 
 
-# data2 %>%
-#   subset(GROUP=="MTD") %>%
-#   group_by(ID) %>%
-# ggplot(aes(x=DAY, y=STO2))+
-#   theme_bw()+
-#   geom_point(aes(color=factor(TUMOR)), 
-#              position=pd, 
-#              size=4, 
-#              alpha=0.6,
-#              show.legend=FALSE)+
-#  geom_line(aes(color=factor(TUMOR)))+
-#   scale_color_viridis_d(end = 0.8)+
-#   labs(title='',
-#        x="Week",
-#        y="Oxygen \nSaturation(%)")+
-#   facet_wrap(~ID,ncol=5)
-# 
-# 
+fold_tHb<-data1 %>%
+  group_by(GROUP) %>%
+  ggplot(aes(x=DAY, y=HB/baseline_tHb))+
+  theme_bw()+
+  geom_point(aes(color=factor(GROUP)),
+             position=pd, 
+             size=4, 
+             alpha=0.2,
+             show.legend=FALSE)+
+stat_summary(fun="median",aes(colour=GROUP),geom="line",size=2,
+             show.legend=FALSE)+
+  scale_color_viridis_d(option="magma",end=.7)+
+  labs(title='Total Hemoglobin',
+       x="Week",
+       y="Fold change")+
+  facet_wrap(~GROUP)
 
+#plot all fold changes
+(fold_StO2+fold_HbO2)/(fold_HbO+fold_tHb)+
+  plot_annotation(title='Fold Changes (normalized to median value at wk 1)',
+  tag_levels="A")&
+  theme_classic()&
+  theme(text=element_text(size=20,family="Atkinson"))
 
 ```
 
 
 
-```{r, plots-everything}
+```{r, plot-everything}
 p1<-ggplot(data1,aes(x=DAY, y=STO2))+
   theme_bw()+
   geom_point(aes(color=factor(GROUP)), 
@@ -271,7 +284,7 @@ All models will follow the same basic construction:
 `method= 'REML',`\n
 `data=data1)`
 
-```{r, StO2 GAM}
+```{r, StO2-GAM}
 pnt<-4
 al<-0.2
 StO2_gam <- gam(STO2 ~ GROUP+s(DAY, by = GROUP, k = 6),
@@ -310,7 +323,7 @@ GAM_StO2_plot<-ggplot(data=data1, aes(x=DAY, y=STO2, group=GROUP)) +
             data=gam_predict_StO2,
               show.legend = FALSE)+
   #facet_wrap(~Group)+
-  labs(y=expression(atop(StO[2],'complete')),x="Week")+
+  labs(y=expression(atop(StO[2])),x="Week")+
     scale_x_continuous(breaks=c(0,2,4,6))+
       theme_classic()+
   scale_color_viridis_d(option="magma",end=.7)
@@ -320,7 +333,7 @@ model1<-GAM_StO2_plot+facet_wrap(~GROUP)
 
 OxyHemglobin GAM
 
-```{r, HbO2 GAM}
+```{r, HbO2-GAM}
 HbO2_gam <- gam(HBO2 ~ GROUP+s(DAY, by = GROUP, k = 6),
             method='REML',
             data  = data1)
@@ -355,7 +368,7 @@ GAM_HbO2_plot<-ggplot(data=data1, aes(x=DAY, y=HBO2, group=GROUP)) +
             data=gam_predict_HbO2,
               show.legend = FALSE)+
   #facet_wrap(~Group)+
-  labs(y=expression(atop(HbO[2],'complete')),x="Week")+
+  labs(y=expression(atop(HbO[2])),x="Week")+
     scale_x_continuous(breaks=c(0,2,4,6))+
       theme_classic()+
  scale_color_viridis_d(option="magma",end=.7)
@@ -365,7 +378,7 @@ model2<-GAM_HbO2_plot+facet_wrap(~GROUP)
 
 Total Hemoglobin GAM
 
-```{r, tHb GAM}
+```{r, tHb-GAM}
 tHb_gam <- gam(HB ~ GROUP+s(DAY, by = GROUP, k = 6),
             method='REML',
             data  = data1)
@@ -411,7 +424,7 @@ model3<-GAM_tHb_plot+facet_wrap(~GROUP)
 
 Deoxyhemoglobin GAM
 
-```{r, HbO GAM}
+```{r, HbO-GAM}
 
 HbO_gam <- gam(HBO ~ GROUP+s(DAY, by = GROUP, k = 6),
             method='REML',
@@ -458,10 +471,11 @@ model4<-GAM_HbO_plot+facet_wrap(~GROUP)
 
 Now, plot all the models at once to compare:
 
-```{r, plot all models,fig.width=14,fig.height=9, warning=FALSE}
+```{r, plot-all-models,fig.width=14,fig.height=9, warning=FALSE}
 
 (model1+model2)/(model3+model4)+
-  plot_annotation(tag_levels="A")& 
+  plot_annotation(title='GAMs -raw data',
+                  tag_levels="A")& 
   theme(text=element_text(size=20,family="Atkinson"))
 
 
@@ -469,7 +483,7 @@ Now, plot all the models at once to compare:
 
 
 # Pairwise comparisons for the models
-```{r, aesthetics for all plots}
+```{r, aesthetics-for-all-plots}
 
 br<-c(0,2,4,6)
 rib_col<-'#EDD03AFF' #color for ribbon
@@ -982,7 +996,8 @@ HbO_MG_MTD<-ggplot(comp_StO2_full, aes(x = Day, y = diff, group = pair)) +
 (StO2_CG_MG+StO2_CG_MTD+StO2_MG_MTD)/
 (HbO2_CG_MG+HbO2_CG_MTD+HbO2_MG_MTD)/
 (tHb_CG_MG+tHb_CG_MTD+tHb_MG_MTD)/
-(HbO_CG_MG+HbO_CG_MTD+HbO_MG_MTD)
+(HbO_CG_MG+HbO_CG_MTD+HbO_MG_MTD)&plot_annotation(title="Pairwise Smooth Comparisons")&
+  theme(plot.title = element_text(size=40))
 
 ```
 
