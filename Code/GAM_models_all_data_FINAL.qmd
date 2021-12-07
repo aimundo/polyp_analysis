@@ -101,7 +101,7 @@ fold_StO2<-data1 %>%
              size=4, 
              alpha=0.2,
              show.legend=FALSE)+
-stat_summary(fun="median",aes(colour=GROUP),geom="line",size=2,
+stat_summary(fun="mean",aes(colour=GROUP),geom="line",size=2,
              show.legend=FALSE)+
   scale_color_viridis_d(option="magma",end=.7)+
   labs(title='Oxygen Saturation',
