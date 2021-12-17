@@ -467,7 +467,7 @@ GAM_HbO_plot<-ggplot(data=data1, aes(x=DAY, y=HBO/baseline_HbO, group=GROUP)) +
             data=gam_predict_HbO,
               show.legend = FALSE)+
   #facet_wrap(~Group)+
-  labs(y=expression(atop(HbO,'complete')),x="Week")+
+  labs(y=expression(atop(HbO)),x="Week")+
     scale_x_continuous(breaks=c(0,2,4,6))+
       theme_classic()+
    thm1
@@ -481,9 +481,10 @@ Now, plot all the models at once to compare:
 ```{r, plot-all-models,fig.width=14,fig.height=9, warning=FALSE}
 
 (model1+model2)/(model3+model4)+
-  plot_annotation(title='GAMs -raw data',
+  plot_annotation(title='',
                   tag_levels="A")& 
-  theme(text=element_text(size=20,family="Atkinson"))
+  theme(text=element_text(size=20,family="Atkinson"),
+        axis.title.y=element_text(size=30))
 
 
 ```
