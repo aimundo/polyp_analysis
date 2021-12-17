@@ -24,9 +24,11 @@ library(mgcv)
 library(tidyverse)
 library(gratia)
 library(showtext)
+library(scico)
 font_add("Atkinson",regular="AtkinsonHyperlegible-Regular.ttf",italic="AtkinsonHyperlegible-Italic.ttf")
 showtext_auto()
 
+thm1<-scale_fill_scico_d(palette="tofino",begin=0.2, end=0.8, direction =1, aesthetics = c("colour","fill"))
 ```
 
 Load data. Variable `GROUP` needs to be a factor. Also, create the Oxyhemoglobin and Deoxyhemoglobin variables and add them to the dataframe.
@@ -39,6 +41,15 @@ data1$HBO2<-(data1$HB*data1$STO2)
 data1$HBO2_SD<-data1$HB_SD*data1$STO2
 data1$HBO<-data1$HB*(1-data1$STO2)
 data1$HBO_SD<-data1$HB_SD*(1-data1$STO2)
+
+#change all MG labels to MET
+
+data1<-data1 %>%
+  mutate(GROUP=case_when(as.character(GROUP)=="MG"~"MET",
+                         TRUE ~ as.character(GROUP))) %>%
+  as.factor(GROUP)
+
+  
 
 
 ```
@@ -61,11 +72,11 @@ ggplot(aes(x=DAY, y=STO2))+
              alpha=0.6,
              show.legend=FALSE)+
  geom_line(aes(color=factor(TUMOR)))+
-  scale_color_viridis_d(end = 0.8)+
   labs(title='',
        x="Week",
        y="Oxygen \nSaturation(%)")+
-  facet_wrap(~ID,ncol=5)
+  facet_wrap(~ID,ncol=5)+
+  thm1
 
 ```
 
@@ -103,11 +114,10 @@ fold_StO2<-data1 %>%
              show.legend=FALSE)+
 stat_summary(fun="mean",aes(colour=GROUP),geom="line",size=2,
              show.legend=FALSE)+
-  scale_color_viridis_d(option="magma",end=.7)+
   labs(title='Oxygen Saturation',
        x="Week",
        y="Fold change")+
-  facet_wrap(~GROUP)
+  facet_wrap(~GROUP)+thm1
 
 
 fold_HbO2<-data1 %>%
@@ -121,11 +131,11 @@ fold_HbO2<-data1 %>%
              show.legend=FALSE)+
 stat_summary(fun="median",aes(colour=GROUP),geom="line",size=2,
              show.legend=FALSE)+
-  scale_color_viridis_d(option="magma",end=.7)+
   labs(title='Oxyhemoglobin',
        x="Week",
        y="Fold change")+
-  facet_wrap(~GROUP)
+  facet_wrap(~GROUP)+
+  thm1
   
 
 fold_HbO<-data1 %>%
@@ -139,11 +149,11 @@ fold_HbO<-data1 %>%
              show.legend=FALSE)+
 stat_summary(fun="median",aes(colour=GROUP),geom="line",size=2,
              show.legend=FALSE)+
-  scale_color_viridis_d(option="magma",end=.7)+
   labs(title='Deoxyhemoglobin',
        x="Week",
        y="Fold change")+
-  facet_wrap(~GROUP)
+  facet_wrap(~GROUP)+
+  thm1
 
 
 fold_tHb<-data1 %>%
@@ -157,15 +167,15 @@ fold_tHb<-data1 %>%
              show.legend=FALSE)+
 stat_summary(fun="median",aes(colour=GROUP),geom="line",size=2,
              show.legend=FALSE)+
-  scale_color_viridis_d(option="magma",end=.7)+
   labs(title='Total Hemoglobin',
        x="Week",
        y="Fold change")+
-  facet_wrap(~GROUP)
+  facet_wrap(~GROUP)+
+  thm1
 
 #plot all fold changes
 (fold_StO2+fold_HbO2)/(fold_HbO+fold_tHb)+
-  plot_annotation(title='Fold Changes (normalized to median value at wk 1)',
+  plot_annotation(
   tag_levels="A")&
   theme_classic()&
   theme(text=element_text(size=20,family="Atkinson"))
@@ -271,13 +281,11 @@ p1+p2+p3+p4 &
   theme(text=element_text(family="Atkinson",size=20))
 ```
 
-What if we normalize each datapoint to the week 1 value?
-
 
 
 # GAMs
 
-GAM with interaction of group and time:
+GAM with interaction of group and time. All models for fold-change values
 All models will follow the same basic construction:
 
 `model<-gam(Variable~Group+s(Day,by=Group=k=6,` \n
@@ -287,7 +295,7 @@ All models will follow the same basic construction:
 ```{r, StO2-GAM}
 pnt<-4
 al<-0.2
-StO2_gam <- gam(STO2 ~ GROUP+s(DAY, by = GROUP, k = 6),
+StO2_gam <- gam(STO2/baseline_StO2 ~ GROUP+s(DAY, by = GROUP, k = 6),
             method='REML',
             data  = data1)
 
@@ -307,7 +315,7 @@ gam_predict_StO2<-gam_predict_StO2%>%
 #plot model
 
 #plot smooths and confidence interval for GAM
-GAM_StO2_plot<-ggplot(data=data1, aes(x=DAY, y=STO2, group=GROUP)) +
+GAM_StO2_plot<-ggplot(data=data1, aes(x=DAY, y=STO2/baseline_StO2, group=GROUP)) +
     geom_point(aes(color=GROUP),size=pnt,alpha=al,show.legend = FALSE)+
   geom_ribbon(aes( x=DAY,ymin=(fit - 2*se.fit), 
                    ymax=(fit + 2*se.fit),
@@ -326,15 +334,14 @@ GAM_StO2_plot<-ggplot(data=data1, aes(x=DAY, y=STO2, group=GROUP)) +
   labs(y=expression(atop(StO[2])),x="Week")+
     scale_x_continuous(breaks=c(0,2,4,6))+
       theme_classic()+
-  scale_color_viridis_d(option="magma",end=.7)
-
+ thm1
 model1<-GAM_StO2_plot+facet_wrap(~GROUP)
 ```
 
-OxyHemglobin GAM
+OxyHemoglobin GAM
 
 ```{r, HbO2-GAM}
-HbO2_gam <- gam(HBO2 ~ GROUP+s(DAY, by = GROUP, k = 6),
+HbO2_gam <- gam(HBO2/baseline_HbO2 ~ GROUP+s(DAY, by = GROUP, k = 6),
             method='REML',
             data  = data1)
 
@@ -352,7 +359,7 @@ gam_predict_HbO2<-gam_predict_HbO2%>%
 #plot model
 
 #plot smooths and confidence interval for GAM
-GAM_HbO2_plot<-ggplot(data=data1, aes(x=DAY, y=HBO2, group=GROUP)) +
+GAM_HbO2_plot<-ggplot(data=data1, aes(x=DAY, y=HBO2/baseline_HbO2, group=GROUP)) +
     geom_point(aes(color=GROUP),size=pnt,alpha=al,show.legend = FALSE)+
   geom_ribbon(aes( x=DAY,ymin=(fit - 2*se.fit), 
                    ymax=(fit + 2*se.fit),
@@ -371,7 +378,7 @@ GAM_HbO2_plot<-ggplot(data=data1, aes(x=DAY, y=HBO2, group=GROUP)) +
   labs(y=expression(atop(HbO[2])),x="Week")+
     scale_x_continuous(breaks=c(0,2,4,6))+
       theme_classic()+
- scale_color_viridis_d(option="magma",end=.7)
+ thm1
 
 model2<-GAM_HbO2_plot+facet_wrap(~GROUP)
 ```
@@ -379,7 +386,7 @@ model2<-GAM_HbO2_plot+facet_wrap(~GROUP)
 Total Hemoglobin GAM
 
 ```{r, tHb-GAM}
-tHb_gam <- gam(HB ~ GROUP+s(DAY, by = GROUP, k = 6),
+tHb_gam <- gam(HB/baseline_tHb ~ GROUP+s(DAY, by = GROUP, k = 6),
             method='REML',
             data  = data1)
 
@@ -397,7 +404,7 @@ gam_predict_tHb<-gam_predict_tHb%>%
 #plot model
 
 #plot smooths and confidence interval for GAM
-GAM_tHb_plot<-ggplot(data=data1, aes(x=DAY, y=HB, group=GROUP)) +
+GAM_tHb_plot<-ggplot(data=data1, aes(x=DAY, y=HB/baseline_tHb, group=GROUP)) +
     geom_point(aes(color=GROUP),size=pnt,alpha=al,show.legend = FALSE)+
   geom_ribbon(aes( x=DAY,ymin=(fit - 2*se.fit), 
                    ymax=(fit + 2*se.fit),
@@ -416,7 +423,7 @@ GAM_tHb_plot<-ggplot(data=data1, aes(x=DAY, y=HB, group=GROUP)) +
   labs(y="tHb",x="Week")+
     scale_x_continuous(breaks=c(0,2,4,6))+
       theme_classic()+
- scale_color_viridis_d(option="magma",end=.7)
+ thm1
 
 model3<-GAM_tHb_plot+facet_wrap(~GROUP)
 ```
@@ -426,7 +433,7 @@ Deoxyhemoglobin GAM
 
 ```{r, HbO-GAM}
 
-HbO_gam <- gam(HBO ~ GROUP+s(DAY, by = GROUP, k = 6),
+HbO_gam <- gam(HBO/baseline_HbO ~ GROUP+s(DAY, by = GROUP, k = 6),
             method='REML',
             data  = data1)
 
@@ -444,7 +451,7 @@ gam_predict_HbO<-gam_predict_HbO2%>%
 #plot model
 
 #plot smooths and confidence interval for GAM
-GAM_HbO_plot<-ggplot(data=data1, aes(x=DAY, y=HBO, group=GROUP)) +
+GAM_HbO_plot<-ggplot(data=data1, aes(x=DAY, y=HBO/baseline_HbO, group=GROUP)) +
     geom_point(aes(color=GROUP),size=pnt,alpha=al,show.legend = FALSE)+
   geom_ribbon(aes( x=DAY,ymin=(fit - 2*se.fit), 
                    ymax=(fit + 2*se.fit),
@@ -463,7 +470,7 @@ GAM_HbO_plot<-ggplot(data=data1, aes(x=DAY, y=HBO, group=GROUP)) +
   labs(y=expression(atop(HbO,'complete')),x="Week")+
     scale_x_continuous(breaks=c(0,2,4,6))+
       theme_classic()+
-   scale_color_viridis_d(option="magma",end=.7)
+   thm1
 
 model4<-GAM_HbO_plot+facet_wrap(~GROUP)
 ```
