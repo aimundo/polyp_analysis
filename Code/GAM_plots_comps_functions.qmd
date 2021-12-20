@@ -3,6 +3,7 @@ title: "GAM_plots_comps_functions"
 format: html
 editor: visual
 ---
+
 The goal of this document is to create functions that simplify the creation of GAM models and the pairwise comparisons of the smooths.
 
 ```{r, echo=FALSE, warning=FALSE}
@@ -21,7 +22,6 @@ showtext_auto()
 
 thm1<-scale_fill_scico_d(palette="tofino",begin=0.2, end=0.8, direction =1, aesthetics = c("colour","fill"))
 ```
-
 
 Load data. Variable `GROUP` needs to be a factor. Also, create the Oxyhemoglobin and Deoxyhemoglobin variables and add them to the dataframe.
 
@@ -72,17 +72,13 @@ data1<-data1 %>%
 
 ```
 
-
 # GAMs
 
 GAM with interaction of group and time. All models for fold-change values will follow the same basic construction:
 
-`model<-gam(Variable~Group+s(Day,by=Group=k=6,` \n
-`method= 'REML',`\n
-`data=data1)`
+`model<-gam(Variable~Group+s(Day,by=Group=k=6,` \n `method= 'REML',`\n `data=data1)`
 
-
-```{r,fit-GAM-plot}
+```{r,fit-GAMs}
 
 StO2_gam <- gam(StO2_fold ~ GROUP+s(DAY, by = GROUP, k = 6),
             method='REML',
@@ -100,6 +96,11 @@ HbO_gam <- gam(HbO_fold ~ GROUP+s(DAY, by = GROUP, k = 6),
             method='REML',
             data  = data1)
 
+```
+
+This is the original function but the improved version is below. This chunk is not evaluated.
+
+```{r,orig-GAM-funct,eval=FALSE}
 #this function takes a GAM model and creates the confidence intervals (both CI and SI) and outputs the plot with the raw data
 GAM_plot<-function(model,data){
   
@@ -161,8 +162,7 @@ a+b+c+d+plot_annotation(tag_levels = "A")
 
 ```
 
-
-```{r,testing-ci-code}
+```{r,GAM-plot-function}
 
 GAM_plot2<-function(model,data){
 
@@ -244,5 +244,327 @@ show.legend=FALSE)+
 
 }
 
-a<-GAM_plot2(StO2_gam,data1)
+a<-GAM_plot2(StO2_gam,data1)+labs(y=expression(atop(StO[2])),x="Week")
+b<-GAM_plot2(HbO2_gam,data1)+labs(y=expression(atop(HbO[2])),x="Week")
+c<-GAM_plot2(tHb_gam,data1)+labs(y="tHb",x="Week")
+d<-GAM_plot2(HbO_gam,data1)+labs(y="HbO",x="Week")
+
+a+b+c+d+plot_annotation(tag_levels = "A")
+```
+
+
+Now, implement the function that makes the pairwise comparisons. First, simultaneous:
+
+```{r,pairwise-comps-func}
+
+difference_pointwise <- function(f1, f2, smooth, by_var, smooth_var, data, Xp, V, coefs, nrep = 1000) {
+  ## make sure f1 and f2 are characters
+  f1 <-  as.character(f1)
+  f2 <-  as.character(f2)
+  cnames <- colnames(Xp)
+  ## columns of Xp associated with pair of smooths
+  c1 <- grepl(gratia:::mgcv_by_smooth_labels(smooth, by_var, f1), cnames, fixed = TRUE)
+  c2 <- grepl(gratia:::mgcv_by_smooth_labels(smooth, by_var, f2), cnames, fixed = TRUE)
+  ## rows of Xp associated with pair of smooths
+  r1 <- data[[by_var]] == f1
+  r2 <- data[[by_var]] == f2
+
+  ## difference rows of Xp for pair of smooths
+  X <- Xp[r1, ] - Xp[r2, ]
+
+  ## zero the cols related to other splines
+ X[, ! (c1 | c2)] <- 0
+
+  ## zero out the parametric cols
+  X[, !grepl('^s\\(', cnames)] <- 0
+
+  ## compute difference
+  sm_diff <- drop(X %*% coefs)
+  se <- sqrt(rowSums((X %*% V) * X))
+  nr <- NROW(X)
+
+  ## Calculate posterior simulation for smooths
+  coefs_sim <- t(rmvn(nrep, rep(0, nrow(V)), V))
+  rownames(coefs_sim) <- rownames(V)
+  simDev <- X %*% coefs_sim
+  absDev <- abs(sweep(simDev, 1, se, FUN = "/"))
+  masd <- apply(absDev, 2, max)
+  crit_s <- quantile(masd, prob = 0.95, type = 8)
+
+
+  out <- list(smooth = rep(smooth, nr), by = rep(by_var, nr),
+              level_1 = rep(f1, nr),
+              level_2 = rep(f2, nr),
+              diff = sm_diff, se = se,
+              lower_s = sm_diff - crit_s * se,
+              upper_s = sm_diff + crit_s*se)
+
+  out <- new_tibble(out, nrow = NROW(X), class = "difference_smooth")
+  ## Only need rows associated with one of the levels
+  out <- bind_cols(out, data[r1, smooth_var])
+
+  out
+}
+
+#does both ci and si
+difference_smooths <- function(model,
+                                 smooth,
+                                 n = 100,
+                                 ci_level = 0.95,
+                                 newdata = NULL,
+                                 partial_match = TRUE,
+                                 unconditional = FALSE,
+                                 frequentist = FALSE,
+                                 nrep = 10000,
+                                 include_means = TRUE,
+                                 ...) {
+  if (missing(smooth)) {
+    stop("Must specify a smooth to difference via 'smooth'.")
+  }
+
+  # smooths in model
+  S <- gratia::smooths(model) # vector of smooth labels - "s(x)"
+  # select smooths
+  select <-
+    gratia:::check_user_select_smooths(smooths = S, select = smooth,
+                                       partial_match = partial_match)#,
+  # model_name = expr_label(substitute(object)))
+  sm_ids <- which(select)
+  smooths <- gratia::get_smooths_by_id(model, sm_ids)
+  sm_data <- map(sm_ids, gratia:::smooth_data,
+                 model = model, n = n, include_all = TRUE)
+  sm_data <- bind_rows(sm_data)
+  by_var <- by_variable(smooths[[1L]])
+  smooth_var <- gratia:::smooth_variable(smooths[[1L]])
+  pairs <- as_tibble(as.data.frame(t(combn(levels(sm_data[[by_var]]), 2)),
+                                   stringsAsFactor = FALSE))
+  names(pairs) <- paste0("f", 1:2)
+
+  Xp <- predict(model, newdata = sm_data, type = "lpmatrix")
+  V <- gratia:::get_vcov(model, unconditional = unconditional,
+                         frequentist = frequentist)
+  coefs <- coef(model)
+
+  out <- pmap(pairs, difference_pointwise, smooth = smooth, by_var = by_var,
+              smooth_var = smooth_var, data = sm_data, Xp = Xp, V = V,
+              coefs = coefs, nrep = nrep)
+  out <- bind_rows(out)
+  crit <- qnorm((1 - ci_level) / 2, lower.tail = FALSE)
+
+  out <- add_column(out,
+                    lower = out$diff - (crit * out$se),
+                    upper = out$diff + (crit * out$se),
+                   .after = 6L)
+  
+  out <- out %>%
+  mutate(Pair_group=as.factor(paste(level_1,"-",level_2)))
+  
+  out
+}
+
+#simultaneous differences
+diff_StO2 <- difference_smooths(StO2_gam, smooth = "s(DAY)", newdata = newdat,
+                     unconditional = TRUE, frequentist = FALSE,
+                     n=100, partial_match = TRUE, nrep=10000)
+
+diff_HbO <- difference_smooths(HbO_gam, smooth = "s(DAY)", newdata = newdat,
+                     unconditional = TRUE, frequentist = FALSE,
+                     n=100, partial_match = TRUE, nrep=10000)
+
+diff_HbO2 <- difference_smooths(HbO2_gam, smooth = "s(DAY)", newdata = newdat,
+                     unconditional = TRUE, frequentist = FALSE,
+                     n=100, partial_match = TRUE, nrep=10000)
+
+
+diff_tHb <- difference_smooths(tHb_gam, smooth = "s(DAY)", newdata = newdat,
+                     unconditional = TRUE, frequentist = FALSE,
+                     n=100, partial_match = TRUE, nrep=10000)
+
+rib_col<-'#8D7D82' #color for ribbon for confidence interval
+control_rib <- '#875F79' #color for ribbon for control region
+treat_rib <- '#A7D89E' #color for ribbon treatment region
+
+
+p1<-ggplot() +
+  geom_line(data = diff_StO2, aes(x = DAY, y = diff),size=1, alpha=0.5) +
+  geom_ribbon(data = diff_StO2, aes(x = DAY, ymin = lower_s, ymax = upper_s,fill=Pair_group),
+              alpha = 0.5, inherit.aes = FALSE, show.legend=FALSE) +
+  geom_hline(yintercept = 0, lty = 2, color = "red")+
+    scale_x_continuous(breaks=c(1,2,3,4,5,6))+
+    labs(y="Difference\n(Complete observations)",title=expression(atop(StO[2])))+
+    theme_classic()+
+    theme(
+    axis.text=element_text(size=22))+
+  facet_wrap(~Pair_group)+
+  thm1
+
+
+
+p2<-ggplot() +
+  geom_line(data = diff_HbO, aes(x = DAY, y = diff),size=1, alpha=0.5) +
+  geom_ribbon(data = diff_HbO, aes(x = DAY, ymin = lower_s, ymax = upper_s,fill=Pair_group),
+              alpha = 0.5, inherit.aes = FALSE, show.legend=FALSE) +
+  geom_hline(yintercept = 0, lty = 2, color = "red")+
+    scale_x_continuous(breaks=c(1,2,3,4,5,6))+
+    labs(y="Difference\n(Complete observations)",title="HbO")+
+    theme_classic()+
+    theme(
+    axis.text=element_text(size=22))+
+  facet_wrap(~Pair_group)+
+  thm1
+
+p3<-ggplot() +
+  geom_line(data = diff_HbO2, aes(x = DAY, y = diff),size=1, alpha=0.5) +
+  geom_ribbon(data = diff_HbO2, aes(x = DAY, ymin = lower_s, ymax = upper_s,fill=Pair_group),
+              alpha = 0.5, inherit.aes = FALSE, show.legend=FALSE) +
+  geom_hline(yintercept = 0, lty = 2, color = "red")+
+    scale_x_continuous(breaks=c(1,2,3,4,5,6))+
+    labs(y="Difference\n(Complete observations)",title=expression(atop(HbO[2])))+
+    theme_classic()+
+    theme(
+    axis.text=element_text(size=22))+
+  facet_wrap(~Pair_group)+
+  thm1
+
+p4<-ggplot() +
+  geom_line(data = diff_tHb, aes(x = DAY, y = diff),size=1, alpha=0.5) +
+  geom_ribbon(data = diff_tHb, aes(x = DAY, ymin = lower_s, ymax = upper_s,fill=Pair_group),
+              alpha = 0.5, inherit.aes = FALSE, show.legend=FALSE) +
+  geom_hline(yintercept = 0, lty = 2, color = "red")+
+    scale_x_continuous(breaks=c(1,2,3,4,5,6))+
+    labs(y="Difference\n(Complete observations)",title="tHb")+
+    theme_classic()+
+    theme(
+    axis.text=element_text(size=22))+
+  facet_wrap(~Pair_group)+
+  thm1
+
+p1+p2+p3+p4+plot_annotation(tag_levels = "A")
+```
+
+I want to examine how to make the pairwise comparisons and create a pointwise confidence interval because in the paper of G. Simpson he reports pointwise confidence intervals, not simultaneous.
+
+```{r,pw-comp}
+
+#Modify function
+
+difference_pointwise2 <- function(f1, f2, smooth, by_var, smooth_var, data, Xp, V, coefs) {
+  ## make sure f1 and f2 are characters
+  f1 <-  as.character(f1)
+  f2 <-  as.character(f2)
+  cnames <- colnames(Xp)
+  ## columns of Xp associated with pair of smooths
+  c1 <- grepl(gratia:::mgcv_by_smooth_labels(smooth, by_var, f1), cnames, fixed = TRUE)
+  c2 <- grepl(gratia:::mgcv_by_smooth_labels(smooth, by_var, f2), cnames, fixed = TRUE)
+  ## rows of Xp associated with pair of smooths
+  r1 <- data[[by_var]] == f1
+  r2 <- data[[by_var]] == f2
+
+  ## difference rows of Xp for pair of smooths
+  X <- Xp[r1, ] - Xp[r2, ]
+
+  ## zero the cols related to other splines
+ X[, ! (c1 | c2)] <- 0
+
+  ## zero out the parametric cols
+  X[, !grepl('^s\\(', cnames)] <- 0
+
+  ## compute difference
+  sm_diff <- drop(X %*% coefs)
+  se <- sqrt(rowSums((X %*% V) * X))
+  nr <- NROW(X)
+  crit <- qt(0.05/2, df.residual(model), lower.tail = FALSE)
+    
+  out <- list(smooth = rep(smooth, nr), by = rep(by_var, nr),
+              level_1 = rep(f1, nr),
+              level_2 = rep(f2, nr),
+              diff = sm_diff, se = se,
+              lower = sm_diff - (crit * se),
+              upper = sm_diff + (crit*se)
+
+  out <- new_tibble(out, nrow = NROW(X), class = "difference_smooth")
+  ## Only need rows associated with one of the levels
+  out <- bind_cols(out, data[r1, smooth_var])
+
+  out
+}
+
+#does both ci and si
+difference_smooths2 <- function(model,
+                                 smooth,
+                                 n = 100,
+                                 #ci_level = 0.95,
+                                 newdata = NULL,
+                                 partial_match = TRUE,
+                                 unconditional = FALSE,
+                                 frequentist = FALSE,
+                                 #nrep = 10000,
+                                 include_means = FALSE,
+                                 ...) {
+  if (missing(smooth)) {
+    stop("Must specify a smooth to difference via 'smooth'.")
+  }
+
+  # smooths in model
+  S <- gratia::smooths(model) # vector of smooth labels - "s(x)"
+  # select smooths
+  select <-
+    gratia:::check_user_select_smooths(smooths = S, select = smooth,
+                                       partial_match = partial_match)#,
+  # model_name = expr_label(substitute(object)))
+  sm_ids <- which(select)
+  smooths <- gratia::get_smooths_by_id(model, sm_ids)
+  sm_data <- map(sm_ids, gratia:::smooth_data,
+                 model = model, n = n, include_all = TRUE)
+  sm_data <- bind_rows(sm_data)
+  by_var <- by_variable(smooths[[1L]])
+  smooth_var <- gratia:::smooth_variable(smooths[[1L]])
+  pairs <- as_tibble(as.data.frame(t(combn(levels(sm_data[[by_var]]), 2)),
+                                   stringsAsFactor = FALSE))
+  names(pairs) <- paste0("f", 1:2)
+
+  Xp <- predict(model, newdata = sm_data, type = "lpmatrix")
+  V <- gratia:::get_vcov(model, unconditional = unconditional,
+                         frequentist = frequentist)
+  coefs <- coef(model)
+
+  out <- pmap(pairs, difference_pointwise2, smooth = smooth, by_var = by_var,
+              smooth_var = smooth_var, data = sm_data, Xp = Xp, V = V,
+              coefs = coefs)
+  out <- bind_rows(out)
+  #crit <- qnorm((1 - ci_level) / 2, lower.tail = FALSE)
+
+  # #out <- add_column(out,
+  #                   lower = out$diff - (crit * out$se),
+  #                   upper = out$diff + (crit * out$se),
+  #                   .after = 6L)
+  
+  out <- out %>%
+  mutate(Pair_group=as.factor(paste(level_1,"-",level_2)))
+  
+  out
+}
+    
+test_StO2 <- difference_smooths2(StO2_gam, smooth = "s(DAY)", newdata = newdat,
+                     unconditional = TRUE, frequentist = FALSE,
+                     n=100, partial_match = TRUE)
+
+
+
+
+p11<-ggplot() +
+  geom_line(data = test_StO2, aes(x = DAY, y = diff),size=1, alpha=0.5) +
+  geom_ribbon(data = test_StO2, aes(x = DAY, ymin = lower_s, ymax = upper_s,fill=Pair_group),
+              alpha = 0.5, inherit.aes = FALSE) +
+  geom_hline(yintercept = 0, lty = 2, color = "red")+
+    scale_x_continuous(breaks=c(1,2,3,4,5,6))+
+    labs(y="Difference\n(Complete observations)")+
+    theme_classic()+
+    theme(
+    axis.text=element_text(size=22))+
+  facet_wrap(~Pair_group)+
+  thm1
+
+p11
+#add column to make "groups" of the pairwise comparisons for plotting
 ```

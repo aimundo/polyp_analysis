@@ -505,7 +505,7 @@ rib_col<-'#EDD03AFF' #color for ribbon
 ##Pairwise comparisons
 
 pdat <- expand.grid(DAY = seq(1, 6, length = 400),
-                    GROUP = c('CG', 'MG'))
+                    GROUP = c('CG', 'MET'))
 
 #this function takes the model, grid and groups to be compared using the lpmatrix
 
@@ -536,7 +536,7 @@ smooth_diff <- function(model, newdata, g1, g2, alpha = 0.05,
                lower = lwr)
 }
 
-comp1<-smooth_diff(StO2_gam,pdat,'CG','MG')
+comp1<-smooth_diff(StO2_gam,pdat,'CG','MET')
 
 comp_StO2_full <- cbind(Day = seq(1, 6, length = 400),
                    rbind(comp1)) %>%
@@ -557,7 +557,7 @@ StO2_CG_MG<-ggplot(comp_StO2_full, aes(x = Day, y = diff, group = pair)) +
     facet_wrap(~ pair) +
     theme_classic()+
     labs(x = 'Days', y = expression(paste('Difference in StO'[2] )))+
-    scale_x_continuous(breaks=br)+
+    #scale_x_continuous(breaks=br)+
     theme(
         text=element_text(size=18),
         legend.title=element_blank()
