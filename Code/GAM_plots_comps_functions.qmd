@@ -161,3 +161,88 @@ a+b+c+d+plot_annotation(tag_levels = "A")
 
 ```
 
+
+```{r,testing-ci-code}
+
+GAM_plot2<-function(model,data){
+
+ci <- confint(model, parm = "s(DAY)", partial_match = TRUE, type = "confidence")
+
+## simultaneous interval
+si <- confint(model, parm = "s(DAY)", type = "simultaneous", partial_match = TRUE)
+
+# mean shift for Treatment group
+Intercept <- coef(model)[1]
+constMET <- coef(model)[2]+Intercept
+constMTD <- coef(model)[3]+Intercept
+
+#extract the response from the model
+test<-model$formula[[2]]
+
+#convert to character
+test<-as.character(test)
+test<-as.list(test)
+#we are doing fold changes, so split the string where the diagonal is. We will end up
+#with a list of lenght three, only the last two contain the terms of interest
+
+
+#select columns that match the pattern
+data<-data %>% 
+  select(DAY,GROUP,"Y"=test[[1]]) 
+
+
+#pointwise confidence interval
+ci <- ci %>%
+mutate(est = case_when(GROUP == "MET" ~ est + constMET,
+                       GROUP == "MTD" ~ est + constMTD,
+                                          TRUE ~ est+Intercept),
+lower = case_when(GROUP == "MET" ~ lower + constMET,
+                  GROUP == "MTD" ~ lower + constMTD,
+                                          TRUE ~ lower+Intercept),
+upper = case_when(GROUP == "MET" ~ upper + constMET,
+                  GROUP == "MTD" ~ upper + constMTD,
+                                          TRUE ~ upper+Intercept))
+
+#simultaneous confidence interval
+si <- si %>%
+mutate(est = case_when(GROUP == "MET" ~ est + constMET,
+                       GROUP == "MTD" ~ est + constMTD,
+                                          TRUE ~ est+Intercept),
+lower = case_when(GROUP == "MET" ~ lower + constMET,
+                  GROUP == "MTD" ~ lower + constMTD,
+                                          TRUE ~ lower+Intercept),
+upper = case_when(GROUP == "MET" ~ upper + constMET,
+                  GROUP == "MTD" ~ upper + constMTD,
+                                          TRUE ~ upper+Intercept))
+
+
+GAM_plot<-ggplot(ci, aes(x = DAY, y = est, group = smooth)) +
+geom_line(lwd = 1) +
+geom_ribbon(data = ci, mapping = aes(ymin = lower, ymax = upper, x = DAY, group = smooth,fill = GROUP),
+inherit.aes = FALSE, alpha = 0.7,
+show.legend=FALSE) +
+geom_ribbon(data = si,
+mapping = aes(ymin = lower, ymax = upper, x = DAY, group = smooth,fill =GROUP),
+inherit.aes = FALSE, alpha = 0.3,
+show.legend=FALSE)+
+    geom_point(data=data, aes(x = DAY, 
+                        y = Y, 
+                        color = GROUP), 
+                        size=1.5,
+                        alpha=0.6, 
+               inherit.aes = FALSE,
+               show.legend = FALSE)+
+    geom_line(data=si,aes(DAY,upper,color=GROUP), size=0.8, alpha=0.7)+
+    geom_line(data=si,aes(DAY,lower,color=GROUP), size=0.8, alpha=0.7)+
+    labs(y=expression(atop(StO[2],'(complete observations)')))+
+    scale_x_continuous(breaks=c(1,2,3,4,5,6))+
+      theme_classic()+
+  theme(
+    axis.text=element_text(size=22))+
+      facet_wrap(~GROUP)+
+      thm1
+
+}
+
+a<-GAM_plot2(StO2_gam,data1)
+```
