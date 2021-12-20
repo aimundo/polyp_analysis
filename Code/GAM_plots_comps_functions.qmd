@@ -252,6 +252,7 @@ d<-GAM_plot2(HbO_gam,data1)+labs(y="HbO",x="Week")
 a+b+c+d+plot_annotation(tag_levels = "A")
 ```
 
+**Variance appears to be very low on the model diagnostics... why?**
 
 Now, implement the function that makes the pairwise comparisons. First, simultaneous:
 
