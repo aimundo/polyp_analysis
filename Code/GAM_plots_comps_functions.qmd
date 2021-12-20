@@ -153,12 +153,13 @@ return(GAM_plot)
   
 }
 
-a<-GAM_plot(StO2_gam,data1)+labs(y=expression(atop(StO[2])),x="Week")
+a<-GAM_plot(StO2_gam,data1)+labs(y=expression(atop(StO[2])),x="Qqqq")
 b<-GAM_plot(HbO2_gam,data1)+labs(y=expression(atop(HbO[2])),x="Week")
 c<-GAM_plot(tHb_gam,data1)+labs(y="tHb",x="Week")
 d<-GAM_plot(HbO_gam,data1)+labs(y="HbO",x="Week")
 
-a+b+c+d+plot_annotation(tag_levels = "A")
+a+b+c+d+plot_annotation(tag_levels = "A") & theme(plot.title = element_text(size=20),
+                                                  axis.title =element_text(size=20) )
 
 ```
 
