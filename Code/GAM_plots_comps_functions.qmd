@@ -79,7 +79,6 @@ GAM with interaction of group and time. All models for fold-change values will f
 `model<-gam(Variable~Group+s(Day,by=Group=k=6,` \n `method= 'REML',`\n `data=data1)`
 
 ```{r,fit-GAMs}
-
 StO2_gam <- gam(StO2_fold ~ GROUP+s(DAY, by = GROUP, k = 6),
             method='REML',
             data  = data1)
