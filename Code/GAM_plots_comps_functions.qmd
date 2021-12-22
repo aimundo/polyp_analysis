@@ -252,6 +252,39 @@ d<-GAM_plot2(HbO_gam,data1)+labs(y="HbO",x="Week")
 a+b+c+d+plot_annotation(tag_levels = "A")
 ```
 
+
+Try the correlation between StO2 and tHb to see if they are correlated:
+
+```{r,correlation-test}
+#get StO2
+StO2<-data1 %>%
+  select(ID,TUMOR,DAY,GROUP,STO2,StO2_fold) %>%
+  rename(Y=STO2,fold=StO2_fold)%>%
+  mutate(TYPE=as.factor('STO2'))
+
+#get tHb
+
+tHb<-data1 %>%
+  select(ID,TUMOR,DAY,GROUP,HB,tHb_fold) %>%
+  rename(Y=HB,fold=tHb_fold)%>%
+  mutate(TYPE=as.factor('tHb'))
+
+testing<-rbind(StO2,tHb)
+
+
+testing<-data1 %>%
+  select(ID,TUMOR,DAY,GROUP,STO2,StO2_fold,HB,tHb_fold) 
+
+ggplot(testing,aes(x=STO2,y=HB))+
+  geom_point()+
+  facet_grid(DAY~GROUP)+
+  theme_bw()+
+  thm1
+  
+  
+
+```
+
 **Variance appears to be very low on the model diagnostics... why?**
 
 Now, implement the function that makes the pairwise comparisons. First, simultaneous:
@@ -449,7 +482,7 @@ I want to examine how to make the pairwise comparisons and create a pointwise co
 
 #Modify function
 
-difference_pointwise2 <- function(f1, f2, smooth, by_var, smooth_var, data, Xp, V, coefs) {
+difference_pointwise2 <- function(f1, f2, model, smooth, by_var, smooth_var, data, Xp, V, coefs) {
   ## make sure f1 and f2 are characters
   f1 <-  as.character(f1)
   f2 <-  as.character(f2)
@@ -460,35 +493,35 @@ difference_pointwise2 <- function(f1, f2, smooth, by_var, smooth_var, data, Xp, 
   ## rows of Xp associated with pair of smooths
   r1 <- data[[by_var]] == f1
   r2 <- data[[by_var]] == f2
-
+  
   ## difference rows of Xp for pair of smooths
   X <- Xp[r1, ] - Xp[r2, ]
-
+  
   ## zero the cols related to other splines
- X[, ! (c1 | c2)] <- 0
-
+  X[, ! (c1 | c2)] <- 0
+  
   ## zero out the parametric cols
   X[, !grepl('^s\\(', cnames)] <- 0
-
+  
   ## compute difference
   sm_diff <- drop(X %*% coefs)
   se <- sqrt(rowSums((X %*% V) * X))
   nr <- NROW(X)
   crit <- qt(0.05/2, df.residual(model), lower.tail = FALSE)
-    
+  
   out <- list(smooth = rep(smooth, nr), by = rep(by_var, nr),
               level_1 = rep(f1, nr),
               level_2 = rep(f2, nr),
               diff = sm_diff, se = se,
               lower = sm_diff - (crit * se),
-              upper = sm_diff + (crit*se)
-
+              upper = sm_diff + (crit*se))
+  
   out <- new_tibble(out, nrow = NROW(X), class = "difference_smooth")
-  ## Only need rows associated with one of the levels
-  out <- bind_cols(out, data[r1, smooth_var])
-
-  out
-}
+              ## Only need rows associated with one of the levels
+              out <- bind_cols(out, data[r1, smooth_var])
+              
+              out
+              }
 
 #does both ci and si
 difference_smooths2 <- function(model,
@@ -508,6 +541,7 @@ difference_smooths2 <- function(model,
 
   # smooths in model
   S <- gratia::smooths(model) # vector of smooth labels - "s(x)"
+  print('a')
   # select smooths
   select <-
     gratia:::check_user_select_smooths(smooths = S, select = smooth,
@@ -515,6 +549,7 @@ difference_smooths2 <- function(model,
   # model_name = expr_label(substitute(object)))
   sm_ids <- which(select)
   smooths <- gratia::get_smooths_by_id(model, sm_ids)
+  print('b')
   sm_data <- map(sm_ids, gratia:::smooth_data,
                  model = model, n = n, include_all = TRUE)
   sm_data <- bind_rows(sm_data)
@@ -523,15 +558,18 @@ difference_smooths2 <- function(model,
   pairs <- as_tibble(as.data.frame(t(combn(levels(sm_data[[by_var]]), 2)),
                                    stringsAsFactor = FALSE))
   names(pairs) <- paste0("f", 1:2)
-
+print('c')
   Xp <- predict(model, newdata = sm_data, type = "lpmatrix")
+  print('c1')
   V <- gratia:::get_vcov(model, unconditional = unconditional,
                          frequentist = frequentist)
+  print('c2')
   coefs <- coef(model)
-
-  out <- pmap(pairs, difference_pointwise2, smooth = smooth, by_var = by_var,
+print('c3')
+  out <- pmap(pairs, difference_pointwise2, model=model, smooth = smooth, by_var = by_var,
               smooth_var = smooth_var, data = sm_data, Xp = Xp, V = V,
               coefs = coefs)
+  print('c4')
   out <- bind_rows(out)
   #crit <- qnorm((1 - ci_level) / 2, lower.tail = FALSE)
 
@@ -539,7 +577,7 @@ difference_smooths2 <- function(model,
   #                   lower = out$diff - (crit * out$se),
   #                   upper = out$diff + (crit * out$se),
   #                   .after = 6L)
-  
+  print('d')
   out <- out %>%
   mutate(Pair_group=as.factor(paste(level_1,"-",level_2)))
   
@@ -547,7 +585,7 @@ difference_smooths2 <- function(model,
 }
     
 test_StO2 <- difference_smooths2(StO2_gam, smooth = "s(DAY)", newdata = newdat,
-                     unconditional = TRUE, frequentist = FALSE,
+                     unconditional = FALSE, frequentist = FALSE,
                      n=100, partial_match = TRUE)
 
 
@@ -555,7 +593,7 @@ test_StO2 <- difference_smooths2(StO2_gam, smooth = "s(DAY)", newdata = newdat,
 
 p11<-ggplot() +
   geom_line(data = test_StO2, aes(x = DAY, y = diff),size=1, alpha=0.5) +
-  geom_ribbon(data = test_StO2, aes(x = DAY, ymin = lower_s, ymax = upper_s,fill=Pair_group),
+  geom_ribbon(data = test_StO2, aes(x = DAY, ymin = lower, ymax = upper,fill=Pair_group),
               alpha = 0.5, inherit.aes = FALSE) +
   geom_hline(yintercept = 0, lty = 2, color = "red")+
     scale_x_continuous(breaks=c(1,2,3,4,5,6))+
