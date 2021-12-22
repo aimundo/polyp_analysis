@@ -275,7 +275,7 @@ testing<-rbind(StO2,tHb)
 testing<-data1 %>%
   select(ID,TUMOR,DAY,GROUP,STO2,StO2_fold,HB,tHb_fold) 
 
-ggplot(testing,aes(x=STO2,y=HB))+
+ggplot(testing,aes(x=StO2_fold,y=tHb_fold))+
   geom_point()+
   facet_grid(DAY~GROUP)+
   theme_bw()+
