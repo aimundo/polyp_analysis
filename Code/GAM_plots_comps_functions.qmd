@@ -217,7 +217,7 @@ upper = case_when(GROUP == "MET" ~ upper + constMET,
 
 
 GAM_plot<-ggplot(ci, aes(x = DAY, y = est, group = smooth)) +
-geom_line(lwd = 1) +
+geom_line(lwd = 1,show.legend=FALSE) +
 geom_ribbon(data = ci, mapping = aes(ymin = lower, ymax = upper, x = DAY, group = smooth,fill = GROUP),
 inherit.aes = FALSE, alpha = 0.7,
 show.legend=FALSE) +
@@ -232,8 +232,8 @@ show.legend=FALSE)+
                         alpha=0.6, 
                inherit.aes = FALSE,
                show.legend = FALSE)+
-    geom_line(data=si,aes(DAY,upper,color=GROUP), size=0.8, alpha=0.7)+
-    geom_line(data=si,aes(DAY,lower,color=GROUP), size=0.8, alpha=0.7)+
+    geom_line(data=si,aes(DAY,upper,color=GROUP), size=0.8, alpha=0.7,show.legend = FALSE)+
+    geom_line(data=si,aes(DAY,lower,color=GROUP), size=0.8, alpha=0.7,show.legend=FALSE)+
     labs(y=expression(atop(StO[2],'(complete observations)')))+
     scale_x_continuous(breaks=c(1,2,3,4,5,6))+
       theme_classic()+
@@ -589,15 +589,28 @@ test_StO2 <- difference_smooths2(StO2_gam, smooth = "s(DAY)", newdata = newdat,
                      n=100, partial_match = TRUE)
 
 
+test_tHb <- difference_smooths2(tHb_gam, smooth = "s(DAY)", newdata = newdat,
+                     unconditional = FALSE, frequentist = FALSE,
+                     n=100, partial_match = TRUE)
+
+test_HbO <- difference_smooths2(HbO_gam, smooth = "s(DAY)", newdata = newdat,
+                     unconditional = FALSE, frequentist = FALSE,
+                     n=100, partial_match = TRUE)
 
 
+test_HbO2 <- difference_smooths2(HbO2_gam, smooth = "s(DAY)", newdata = newdat,
+                     unconditional = FALSE, frequentist = FALSE,
+                     n=100, partial_match = TRUE)
+
+plot_pairwise_pointwise<-function(model){
 p11<-ggplot() +
-  geom_line(data = test_StO2, aes(x = DAY, y = diff),size=1, alpha=0.5) +
-  geom_ribbon(data = test_StO2, aes(x = DAY, ymin = lower, ymax = upper,fill=Pair_group),
-              alpha = 0.5, inherit.aes = FALSE) +
+  geom_line(data = model, aes(x = DAY, y = diff),size=1, alpha=0.5) +
+  geom_ribbon(data = model, aes(x = DAY, ymin = lower, ymax = upper),
+              alpha = 0.5, inherit.aes = FALSE,
+              fill='#f2c844',
+              show.legend=FALSE) +
   geom_hline(yintercept = 0, lty = 2, color = "red")+
     scale_x_continuous(breaks=c(1,2,3,4,5,6))+
-    labs(y="Difference\n(Complete observations)")+
     theme_classic()+
     theme(
     axis.text=element_text(size=22))+
@@ -605,5 +618,14 @@ p11<-ggplot() +
   thm1
 
 p11
+}
+
+a1<-plot_pairwise_pointwise(test_StO2)+labs(y='StO2')
+b1<-plot_pairwise_pointwise(test_HbO2)+labs(y='HbO2')
+c1<-plot_pairwise_pointwise(test_tHb)+labs(y='tHb')
+d1<-plot_pairwise_pointwise(test_HbO)+labs(y='HbO')
+
+a1+b1+c1+d1+plot_annotation(tag_levels = 'A')
+
 #add column to make "groups" of the pairwise comparisons for plotting
 ```
